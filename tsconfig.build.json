@@ -1,0 +1,16 @@
+
+{
+  "extends": "./tsconfig.json",  
+  "exclude": [
+    "node_modules",
+    "dist",
+    "test",  
+    "**/*.spec.ts",
+    "**/*.test.ts"
+  ],
+  "compilerOptions": {
+    "composite": false,
+    "declarationMap": false
+  },
+  "references": []
+}
