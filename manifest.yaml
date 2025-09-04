@@ -8,6 +8,5 @@ Description: Conector oficial do Timelapse para integração com o Redmine.
 Tags:
   - redmine
 SourceUrl: https://github.com/Gustavohps10/redmine-plugin.git
-IconUrl: >-
-  https://raw.githubusercontent.com/Gustavohps10/timelapse/main/src/packages/ui/src/assets/temp-plugins-icons/redmine.png
+IconUrl: https://raw.githubusercontent.com/Gustavohps10/timelapse/main/src/packages/ui/src/assets/temp-plugins-icons/redmine.png
 InstallerUrl: ''
