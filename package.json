@@ -1,7 +1,6 @@
 {
   "name": "@timelapse/redmine-plugin",
   "version": "1.0.0",
-  "private": false,
   "description": "Conector oficial do Timelapse para integração com o Redmine.",
   "author": "Gustavo gustavoh.santos735@gmail.com>",
   "license": "MIT",
@@ -27,10 +26,12 @@
   },
   "scripts": {
     "build": "tsup --format esm,cjs --dts",
-    "clean": "rimraf dist"
+    "clean": "rimraf dist",
+    "manifest": "timelapse manifest ./ --config ./timelapse.json",
+    "pkg": "timelapse pkg ./dist --config ./timelapse.json"
   },
   "dependencies": {
-    "@timelapse/connector-sdk": "^2.0.0",
+    "@timelapse/connector-sdk": "^1.2.0",
     "axios": "^1.7.9"
   },
   "devDependencies": {
@@ -38,5 +39,6 @@
     "@types/node": "^24.3.0",
     "tsup": "^8.5.0",
     "typescript": "^5.8.3"
-  }
+  },
+  "packageManager": "yarn@4.9.4"
 }
