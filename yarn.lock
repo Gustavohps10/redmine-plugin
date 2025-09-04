@@ -729,12 +729,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@timelapse/connector-sdk@npm:^1.2.0":
-  version: 1.2.0
-  resolution: "@timelapse/connector-sdk@npm:1.2.0"
+"@timelapse/connector-sdk@npm:^1.2.1":
+  version: 1.2.1
+  resolution: "@timelapse/connector-sdk@npm:1.2.1"
   bin:
     timelapse: dist/cli.cjs
-  checksum: 10c0/425d05aa1bbbbe66e9235ed46e77c783374ce4635a316fb39af3a23647752b72a2b6cb17b4165fd4ba7028c7bdc7cbb59906b73db6c381cc54e697333f167dca
+  checksum: 10c0/231d94e62512a676b32292a35556eae2d986ae83fdd4659507178765c40a05604ce828c8947bd53fadc2f5bcc8476bb6d274dc85744bf96f4c1b58410c80c1fd
   languageName: node
   linkType: hard
 
@@ -743,7 +743,7 @@ __metadata:
   resolution: "@timelapse/redmine-plugin@workspace:."
   dependencies:
     "@changesets/cli": "npm:^2.29.6"
-    "@timelapse/connector-sdk": "npm:^1.2.0"
+    "@timelapse/connector-sdk": "npm:^1.2.1"
     "@types/node": "npm:^24.3.0"
     axios: "npm:^1.7.9"
     tsup: "npm:^8.5.0"

@@ -31,7 +31,7 @@
     "pkg": "timelapse pkg ./dist --config ./timelapse.json"
   },
   "dependencies": {
-    "@timelapse/connector-sdk": "^1.2.0",
+    "@timelapse/connector-sdk": "^1.2.1",
     "axios": "^1.7.9"
   },
   "devDependencies": {

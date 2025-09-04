@@ -3,10 +3,13 @@ Version: 1.0.0
 Type: DataSource
 Name: '@timelapse/redmine-plugin'
 Author: Gustavo Henrique
-ShortDescription: Redmine Plugin
-Description: Conector oficial do Timelapse para integração com o Redmine.
+ShortDescription: Redmine Addon
+Description: Redmine Addon
 Tags:
   - redmine
+  - time
+  - clock
 SourceUrl: https://github.com/Gustavohps10/redmine-plugin.git
-IconUrl: https://raw.githubusercontent.com/Gustavohps10/timelapse/main/src/packages/ui/src/assets/temp-plugins-icons/redmine.png
+IconUrl: >-
+  https://raw.githubusercontent.com/Gustavohps10/timelapse/main/src/packages/ui/src/assets/temp-plugins-icons/redmine.png
 InstallerUrl: ''
