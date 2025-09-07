@@ -10,5 +10,5 @@ Tags:
   - datasource
   - time-entries
 SourceUrl: https://github.com/Gustavohps10/redmine-plugin.git
-IconUrl: 'https://github.com/Gustavohps10/redmine-plugin/blob/main/src/redmine.png'
-InstallerUrl: ''
+IconUrl: 'https://raw.githubusercontent.com/Gustavohps10/redmine-plugin/main/src/icon.png'
+InstallerUrl: 'https://raw.githubusercontent.com/Gustavohps10/redmine-plugin/main/installer.yaml'
