@@ -4,7 +4,7 @@ import {
   MemberDTO,
   PagedResultDTO,
   PaginationOptionsDTO,
-} from '@timelapse/connector-sdk'
+} from '@timelapse/sdk'
 
 import { RedmineBase } from '@/RedmineBase'
 

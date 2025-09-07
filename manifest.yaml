@@ -1,15 +1,14 @@
-AddonId: timelapseredmine-plugin
+AddonId: gustavohps10-redmine
 Version: 1.0.0
 Type: DataSource
-Name: '@timelapse/redmine-plugin'
+Name: Redmine
 Author: Gustavo Henrique
-ShortDescription: Redmine Addon
-Description: Redmine Addon
+ShortDescription: Redmine data source for projects and issues
+Description: Integration with Redmine to fetch projects, issues, users, and time entries
 Tags:
   - redmine
-  - time
-  - clock
+  - datasource
+  - time-entries
 SourceUrl: https://github.com/Gustavohps10/redmine-plugin.git
-IconUrl: >-
-  https://raw.githubusercontent.com/Gustavohps10/timelapse/main/src/packages/ui/src/assets/temp-plugins-icons/redmine.png
+IconUrl: 'https://github.com/Gustavohps10/redmine-plugin/blob/main/src/redmine.png'
 InstallerUrl: ''

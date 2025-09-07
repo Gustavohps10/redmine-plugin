@@ -3,7 +3,7 @@ import {
   PagedResultDTO,
   PaginationOptionsDTO,
   TaskDTO,
-} from '@timelapse/connector-sdk'
+} from '@timelapse/sdk'
 
 export class RedmineTaskQuery implements ITaskQuery {
   findAll(pagination?: PaginationOptionsDTO): Promise<PagedResultDTO<TaskDTO>> {

@@ -1,4 +1,4 @@
-import { Context } from '@timelapse/connector-sdk'
+import { Context } from '@timelapse/sdk'
 import axios, { AxiosInstance } from 'axios'
 
 export abstract class RedmineBase {

@@ -4,7 +4,7 @@ import {
   Either,
   IAuthenticationStrategy,
   MemberDTO,
-} from '@timelapse/connector-sdk'
+} from '@timelapse/sdk'
 import axios, { AxiosInstance } from 'axios'
 
 export interface RedmineConfiguration {

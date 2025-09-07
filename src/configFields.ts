@@ -1,4 +1,4 @@
-import { FieldGroup } from '@timelapse/connector-sdk'
+import { FieldGroup } from '@timelapse/sdk'
 
 export const credentialFieldGroups: FieldGroup[] = [
   {

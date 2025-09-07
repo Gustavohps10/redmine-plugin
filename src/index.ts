@@ -1,4 +1,4 @@
-import { Context, IConnector } from '@timelapse/connector-sdk'
+import { Context, IConnector } from '@timelapse/sdk'
 
 import { configurationFieldGroups, credentialFieldGroups } from '@/configFields'
 import { RedmineAuthenticationStrategy } from '@/RedmineAuthenticationStrategy'
