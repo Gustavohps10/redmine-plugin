@@ -1,6 +1,6 @@
 {
   "name": "@timelapse/redmine-plugin",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Conector oficial do Timelapse para integração com o Redmine.",
   "author": "Gustavo gustavoh.santos735@gmail.com>",
   "license": "MIT",
