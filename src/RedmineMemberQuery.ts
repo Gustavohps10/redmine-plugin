@@ -1,10 +1,10 @@
 import {
-  Context,
+  DataSourceContext,
   IMemberQuery,
   MemberDTO,
   PagedResultDTO,
   PaginationOptionsDTO,
-} from '@timelapse/sdk'
+} from '@metric-org/sdk'
 
 import { RedmineBase } from '@/RedmineBase'
 
@@ -30,7 +30,7 @@ interface RedmineUserResponse {
 }
 
 export class RedmineMemberQuery extends RedmineBase implements IMemberQuery {
-  constructor(context: Context) {
+  constructor(context: DataSourceContext) {
     super(context)
   }
   findByCredentials(login: string, password: string): Promise<MemberDTO> {
@@ -69,10 +69,11 @@ export class RedmineMemberQuery extends RedmineBase implements IMemberQuery {
   }
 
   public async findById(id: string): Promise<MemberDTO> {
-    const client = await this.getAuthenticatedClient()
+    const client = this.getHttpClient()
     const response = await client.get<RedmineUserResponse>(`/users/${id}.json`)
+    if (response.isFailure()) throw new Error(response.failure.messageKey)
 
-    const redmineUser = response.data.user
+    const redmineUser = response.success.user
 
     const member: MemberDTO = {
       id: redmineUser.id,
@@ -80,10 +81,9 @@ export class RedmineMemberQuery extends RedmineBase implements IMemberQuery {
       firstname: redmineUser.firstname,
       lastname: redmineUser.lastname,
       admin: redmineUser.admin,
-      created_on: redmineUser.created_on,
-      last_login_on: redmineUser.last_login_on,
-      api_key: redmineUser.api_key,
-      custom_fields: redmineUser.custom_fields,
+      createdOn: redmineUser.created_on,
+      lastLoginOn: redmineUser.last_login_on,
+      customFields: redmineUser.custom_fields,
     }
 
     return member

@@ -1,8 +1,8 @@
 {
-  "name": "@timelapse/redmine-plugin",
-  "version": "1.0.1",
-  "description": "Conector oficial do Timelapse para integração com o Redmine.",
-  "author": "Gustavo gustavoh.santos735@gmail.com>",
+  "name": "@metric-org/redmine-plugin",
+  "version": "0.1.0",
+  "description": "Conector oficial do Redmine para a plataforma Metric.",
+  "author": "Gustavo <gustavoh.santos735@gmail.com>",
   "license": "MIT",
   "changeset": "changeset",
   "repository": {
@@ -27,16 +27,17 @@
   "scripts": {
     "build": "tsup --format esm,cjs --dts",
     "clean": "rimraf dist",
-    "manifest": "timelapse manifest ./ --config ./timelapse.json",
-    "pkg": "timelapse pkg ./dist --config ./timelapse.json"
+    "manifest": "metric manifest ./",
+    "pkg": "metric pkg ./"
   },
   "dependencies": {
-    "@timelapse/sdk": "^1.1.0",
+    "@metric-org/sdk": "^0.1.0",
     "axios": "^1.7.9"
   },
   "devDependencies": {
     "@changesets/cli": "^2.29.6",
     "@types/node": "^24.3.0",
+    "rimraf": "^6.0.1",
     "tsup": "^8.5.0",
     "typescript": "^5.8.3"
   },

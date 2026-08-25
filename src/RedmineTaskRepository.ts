@@ -1,4 +1,4 @@
-import { ITaskRepository, Task } from '@timelapse/sdk'
+import { ITaskRepository, Task } from '@metric-org/sdk'
 
 export class RedmineTaskRepository implements ITaskRepository {
   create(entity: Task): Promise<void> {

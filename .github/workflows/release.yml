@@ -1,0 +1,62 @@
+﻿name: Release & Package Addon
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Build, Package and Release Addon
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'yarn'
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Install Dependencies
+        run: yarn install
+
+      - name: Build TypeScript
+        run: yarn build
+
+      - name: Extract Tag & Version
+        id: vars
+        run: |
+          TAG_NAME=${GITHUB_REF_NAME}
+          VERSION=${TAG_NAME#v}
+          echo "VERSION=${VERSION}" >> $GITHUB_OUTPUT
+          echo "TAG_NAME=${TAG_NAME}" >> $GITHUB_OUTPUT
+
+      - name: Validate and Package Addon (.tladdon)
+        run: |
+          DOWNLOAD_URL="https://github.com/${{ github.repository }}/releases/download/${{ steps.vars.outputs.TAG_NAME }}/gustavohps10-redmine-${{ steps.vars.outputs.VERSION }}.tladdon"
+          echo "Packing with Download URL: $DOWNLOAD_URL"
+          yarn metric validate ./
+          yarn metric pkg ./ --download-url "$DOWNLOAD_URL"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: Release ${{ steps.vars.outputs.TAG_NAME }}
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+          files: |
+            *.tladdon
+            manifest.yaml
+            installer.yaml
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -4,7 +4,7 @@ import {
   Either,
   IAuthenticationStrategy,
   MemberDTO,
-} from '@timelapse/sdk'
+} from '@metric-org/sdk'
 import axios, { AxiosInstance } from 'axios'
 
 export interface RedmineConfiguration {
@@ -12,12 +12,10 @@ export interface RedmineConfiguration {
 }
 
 export interface RedmineCredentials {
-  login?: string
-  password?: string
-  apiKey?: string
+  apiKey: string
+  atomKey: string
 }
 
-// Novo tipo que unifica a entrada
 export interface RedmineAuthInput {
   configuration: RedmineConfiguration
   credentials: RedmineCredentials
@@ -44,9 +42,7 @@ interface RedmineUserResponse {
   user: RedmineUserAPIResponse
 }
 
-export class RedmineAuthenticationStrategy
-  implements IAuthenticationStrategy<RedmineAuthInput>
-{
+export class RedmineAuthenticationStrategy implements IAuthenticationStrategy<RedmineAuthInput> {
   private getApiClient(apiUrl: string): AxiosInstance {
     return axios.create({ baseURL: apiUrl })
   }
@@ -57,20 +53,20 @@ export class RedmineAuthenticationStrategy
     try {
       const { configuration, credentials } = input
 
-      const apiClient = this.getApiClient(configuration.apiUrl)
+      if (!credentials?.apiKey || !credentials?.atomKey) {
+        return Either.failure(
+          AppError.ValidationError(
+            'Chave de Acesso à API e Chave de Acesso ao Atom são obrigatórias.',
+          ),
+        )
+      }
 
-      const authHeaders = credentials.apiKey
-        ? { 'X-Redmine-API-Key': credentials.apiKey }
-        : {
-            Authorization: `Basic ${Buffer.from(
-              `${credentials.login}:${credentials.password}`,
-            ).toString('base64')}`,
-          }
+      const apiClient = this.getApiClient(configuration.apiUrl)
 
       const response = await apiClient.get<RedmineUserResponse>(
         '/users/current.json',
         {
-          headers: authHeaders,
+          headers: { 'X-Redmine-API-Key': credentials.apiKey },
         },
       )
 
@@ -82,26 +78,24 @@ export class RedmineAuthenticationStrategy
         firstname: redmineUser.firstname,
         lastname: redmineUser.lastname,
         admin: redmineUser.admin,
-        created_on: redmineUser.created_on,
-        last_login_on: redmineUser.last_login_on,
-        api_key: redmineUser.api_key,
-        custom_fields: redmineUser.custom_fields,
+        createdOn: redmineUser.created_on,
+        lastLoginOn: redmineUser.last_login_on,
+        customFields: redmineUser.custom_fields,
       }
 
       const authenticationResult: AuthenticationResult = {
         member: member,
         credentials: {
-          apiKey: member.api_key,
+          apiKey: credentials.apiKey,
+          atomKey: credentials.atomKey,
         },
       }
 
       return Either.success(authenticationResult)
     } catch {
       return Either.failure(
-        new AppError(
-          'Não foi possível autenticar com Redmine. Verifique suas credenciais e a URL.',
-          '',
-          401,
+        AppError.Unauthorized(
+          'Não foi possível autenticar com Redmine. Verifique suas chaves de acesso e a URL.',
         ),
       )
     }

@@ -526,6 +526,40 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@metric-org/redmine-plugin@workspace:.":
+  version: 0.0.0-use.local
+  resolution: "@metric-org/redmine-plugin@workspace:."
+  dependencies:
+    "@changesets/cli": "npm:^2.29.6"
+    "@metric-org/sdk": "npm:^0.1.0"
+    "@types/node": "npm:^24.3.0"
+    axios: "npm:^1.7.9"
+    rimraf: "npm:^6.0.1"
+    tsup: "npm:^8.5.0"
+    typescript: "npm:^5.8.3"
+  languageName: unknown
+  linkType: soft
+
+"@metric-org/sdk@npm:^0.1.0":
+  version: 0.1.0
+  resolution: "@metric-org/sdk@npm:0.1.0"
+  dependencies:
+    highlight.js: "npm:^11.11.1"
+    textile-js: "npm:^2.1.1"
+    turndown: "npm:^7.2.1"
+  bin:
+    metric: dist/cli.cjs
+  checksum: 10c0/6f27c4291a9a704f360d499248849fb3bed5985b0e07b6b1b3352d97ef2ff83cecf9b03d085c8e977b6c4dbc6613873cc6f53be673c4b2d46cee8c2efde7d8d1
+  languageName: node
+  linkType: hard
+
+"@mixmark-io/domino@npm:^2.2.0":
+  version: 2.2.0
+  resolution: "@mixmark-io/domino@npm:2.2.0"
+  checksum: 10c0/aa468a15f9217d425220fe6a4b3f9416cbe8e566ee14efc191c6d5cc04fe39338b16a90bbac190f28d44e69465db5f2cf95f479c621ce38060ca6b2a3d346e9d
+  languageName: node
+  linkType: hard
+
 "@nodelib/fs.scandir@npm:2.1.5":
   version: 2.1.5
   resolution: "@nodelib/fs.scandir@npm:2.1.5"
@@ -729,28 +763,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@timelapse/redmine-plugin@workspace:.":
-  version: 0.0.0-use.local
-  resolution: "@timelapse/redmine-plugin@workspace:."
-  dependencies:
-    "@changesets/cli": "npm:^2.29.6"
-    "@timelapse/sdk": "npm:^1.1.0"
-    "@types/node": "npm:^24.3.0"
-    axios: "npm:^1.7.9"
-    tsup: "npm:^8.5.0"
-    typescript: "npm:^5.8.3"
-  languageName: unknown
-  linkType: soft
-
-"@timelapse/sdk@npm:^1.1.0":
-  version: 1.1.0
-  resolution: "@timelapse/sdk@npm:1.1.0"
-  bin:
-    timelapse: dist/cli.cjs
-  checksum: 10c0/7e69386dbcf16f047bf40964048eaa1480af97cec832e9da38a4ed7af0fa7c476c21877420bcb5a1510898d3249ab32762e53f165fda24f049fccbbfc9267a51
-  languageName: node
-  linkType: hard
-
 "@types/estree@npm:1.0.8":
   version: 1.0.8
   resolution: "@types/estree@npm:1.0.8"
@@ -882,6 +894,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"balanced-match@npm:^4.0.2":
+  version: 4.0.4
+  resolution: "balanced-match@npm:4.0.4"
+  checksum: 10c0/07e86102a3eb2ee2a6a1a89164f29d0dbaebd28f2ca3f5ca786f36b8b23d9e417eb3be45a4acf754f837be5ac0a2317de90d3fcb7f4f4dc95720a1f36b26a17b
+  languageName: node
+  linkType: hard
+
 "better-path-resolve@npm:1.0.0":
   version: 1.0.0
   resolution: "better-path-resolve@npm:1.0.0"
@@ -897,6 +916,15 @@ __metadata:
   dependencies:
     balanced-match: "npm:^1.0.0"
   checksum: 10c0/6d117a4c793488af86b83172deb6af143e94c17bc53b0b3cec259733923b4ca84679d506ac261f4ba3c7ed37c46018e2ff442f9ce453af8643ecd64f4a54e6cf
+  languageName: node
+  linkType: hard
+
+"brace-expansion@npm:^5.0.8":
+  version: 5.0.9
+  resolution: "brace-expansion@npm:5.0.9"
+  dependencies:
+    balanced-match: "npm:^4.0.2"
+  checksum: 10c0/3dea38884a1c3c8b1c9c44a7402a0c76fca460f70cffb3127242b0b4cbf4472019e022ade021eec44838ff19f1dac2625dfd11dd459d7e1e055b0698a8d52fec
   languageName: node
   linkType: hard
 
@@ -1499,6 +1527,17 @@ __metadata:
   languageName: node
   linkType: hard
 
+"glob@npm:^13.0.3":
+  version: 13.0.6
+  resolution: "glob@npm:13.0.6"
+  dependencies:
+    minimatch: "npm:^10.2.2"
+    minipass: "npm:^7.1.3"
+    path-scurry: "npm:^2.0.2"
+  checksum: 10c0/269c236f11a9b50357fe7a8c6aadac667e01deb5242b19c84975628f05f4438d8ee1354bb62c5d6c10f37fd59911b54d7799730633a2786660d8c69f1d18120a
+  languageName: node
+  linkType: hard
+
 "globby@npm:^11.0.0":
   version: 11.1.0
   resolution: "globby@npm:11.1.0"
@@ -1549,6 +1588,13 @@ __metadata:
   dependencies:
     function-bind: "npm:^1.1.2"
   checksum: 10c0/3769d434703b8ac66b209a4cca0737519925bbdb61dd887f93a16372b14694c63ff4e797686d87c90f08168e81082248b9b028bad60d4da9e0d1148766f56eb9
+  languageName: node
+  linkType: hard
+
+"highlight.js@npm:^11.11.1":
+  version: 11.12.0
+  resolution: "highlight.js@npm:11.12.0"
+  checksum: 10c0/c62ebfad125b541790412374a15ae1ca15a45fdfac0fae2b5c96b6a10dc8d5d15380adf748584fb08cfeb4db2b3a749a170e2afd0b640e9fad86445b1c435777
   languageName: node
   linkType: hard
 
@@ -1773,6 +1819,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"lru-cache@npm:^11.0.0":
+  version: 11.5.2
+  resolution: "lru-cache@npm:11.5.2"
+  checksum: 10c0/ece1ad731f5b655e85d67047d04bfc13823dc77aa61c5454924a9869ba600a0104e39cc33d726021feef812bc347ca34a5608a5eb1972a5dd0870b7ecd42c3f2
+  languageName: node
+  linkType: hard
+
 "magic-string@npm:^0.30.17":
   version: 0.30.18
   resolution: "magic-string@npm:0.30.18"
@@ -1838,6 +1891,15 @@ __metadata:
   dependencies:
     mime-db: "npm:1.52.0"
   checksum: 10c0/82fb07ec56d8ff1fc999a84f2f217aa46cb6ed1033fefaabd5785b9a974ed225c90dc72fff460259e66b95b73648596dbcc50d51ed69cdf464af2d237d3149b2
+  languageName: node
+  linkType: hard
+
+"minimatch@npm:^10.2.2":
+  version: 10.2.6
+  resolution: "minimatch@npm:10.2.6"
+  dependencies:
+    brace-expansion: "npm:^5.0.8"
+  checksum: 10c0/4559a836243b98bd4d17ea9f7edae698717c76399eea7be374f3737f33164e4907f19e9726891ddeb122f750a5a7fa80d2ac43e851d6e5984dc4ff42ec127d3a
   languageName: node
   linkType: hard
 
@@ -1914,6 +1976,13 @@ __metadata:
   version: 7.1.2
   resolution: "minipass@npm:7.1.2"
   checksum: 10c0/b0fd20bb9fb56e5fa9a8bfac539e8915ae07430a619e4b86ff71f5fc757ef3924b23b2c4230393af1eda647ed3d75739e4e0acb250a6b1eb277cf7f8fe449557
+  languageName: node
+  linkType: hard
+
+"minipass@npm:^7.1.3":
+  version: 7.1.3
+  resolution: "minipass@npm:7.1.3"
+  checksum: 10c0/539da88daca16533211ea5a9ee98dc62ff5742f531f54640dd34429e621955e91cc280a91a776026264b7f9f6735947629f920944e9c1558369e8bf22eb33fbb
   languageName: node
   linkType: hard
 
@@ -2072,7 +2141,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"package-json-from-dist@npm:^1.0.0":
+"package-json-from-dist@npm:^1.0.0, package-json-from-dist@npm:^1.0.1":
   version: 1.0.1
   resolution: "package-json-from-dist@npm:1.0.1"
   checksum: 10c0/62ba2785eb655fec084a257af34dbe24292ab74516d6aecef97ef72d4897310bc6898f6c85b5cd22770eaa1ce60d55a0230e150fb6a966e3ecd6c511e23d164b
@@ -2109,6 +2178,16 @@ __metadata:
     lru-cache: "npm:^10.2.0"
     minipass: "npm:^5.0.0 || ^6.0.2 || ^7.0.0"
   checksum: 10c0/32a13711a2a505616ae1cc1b5076801e453e7aae6ac40ab55b388bb91b9d0547a52f5aaceff710ea400205f18691120d4431e520afbe4266b836fadede15872d
+  languageName: node
+  linkType: hard
+
+"path-scurry@npm:^2.0.2":
+  version: 2.0.2
+  resolution: "path-scurry@npm:2.0.2"
+  dependencies:
+    lru-cache: "npm:^11.0.0"
+    minipass: "npm:^7.1.2"
+  checksum: 10c0/b35ad37cf6557a87fd057121ce2be7695380c9138d93e87ae928609da259ea0a170fac6f3ef1eb3ece8a068e8b7f2f3adf5bb2374cf4d4a57fe484954fcc9482
   languageName: node
   linkType: hard
 
@@ -2286,6 +2365,18 @@ __metadata:
   version: 1.1.0
   resolution: "reusify@npm:1.1.0"
   checksum: 10c0/4eff0d4a5f9383566c7d7ec437b671cc51b25963bd61bf127c3f3d3f68e44a026d99b8d2f1ad344afff8d278a8fe70a8ea092650a716d22287e8bef7126bb2fa
+  languageName: node
+  linkType: hard
+
+"rimraf@npm:^6.0.1":
+  version: 6.1.3
+  resolution: "rimraf@npm:6.1.3"
+  dependencies:
+    glob: "npm:^13.0.3"
+    package-json-from-dist: "npm:^1.0.1"
+  bin:
+    rimraf: dist/esm/bin.mjs
+  checksum: 10c0/4a56537850102e20ba5d5eb49f366b4b7b2435389734b4b8480cf0e0eb0f6f5d0c44120a171aeb0d8f9ab40312a10d2262f3f50acbad803e32caef61b6cf86fc
   languageName: node
   linkType: hard
 
@@ -2571,6 +2662,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"textile-js@npm:^2.1.1":
+  version: 2.1.1
+  resolution: "textile-js@npm:2.1.1"
+  bin:
+    textile-js: bin/textile
+  checksum: 10c0/39f5dd5fe0f396a25f1a9bb8be423bea5c41a7b8696e82b66450c6a00208d83c540de0154d92da35fb0ced3eb36d2ee51933cfdf3afe908beed14f32d45bd2f1
+  languageName: node
+  linkType: hard
+
 "thenify-all@npm:^1.0.0":
   version: 1.6.0
   resolution: "thenify-all@npm:1.6.0"
@@ -2679,6 +2779,15 @@ __metadata:
     tsup: dist/cli-default.js
     tsup-node: dist/cli-node.js
   checksum: 10c0/2eddc1138ad992a2e67d826e92e0b0c4f650367355866c77df8368ade9489e0a8bf2b52b352e97fec83dc690af05881c29c489af27acb86ac2cef38b0d029087
+  languageName: node
+  linkType: hard
+
+"turndown@npm:^7.2.1":
+  version: 7.2.4
+  resolution: "turndown@npm:7.2.4"
+  dependencies:
+    "@mixmark-io/domino": "npm:^2.2.0"
+  checksum: 10c0/8e66e24bc9d9cdcf720f0ee2655a61d9b9e60ebe2763e97a7a8c3f689e9154717bbea7ed48cc5e355651f34182da698c6bc5fef3028e5600c1cadb7e117376d5
   languageName: node
   linkType: hard
 
