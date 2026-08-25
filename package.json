@@ -28,6 +28,7 @@
     "build": "tsup --format esm,cjs --dts",
     "clean": "rimraf dist",
     "manifest": "metric manifest ./",
+    "sync:manifest": "node scripts/sync-manifest.js",
     "pkg": "metric pkg ./"
   },
   "dependencies": {

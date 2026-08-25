@@ -16,6 +16,8 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -40,12 +42,23 @@ jobs:
           echo "VERSION=${VERSION}" >> $GITHUB_OUTPUT
           echo "TAG_NAME=${TAG_NAME}" >> $GITHUB_OUTPUT
 
+      - name: Auto-Sync Manifest (Screenshots & Dynamic URLs)
+        run: |
+          yarn sync:manifest
+
       - name: Validate and Package Addon (.tladdon)
         run: |
           DOWNLOAD_URL="https://github.com/${{ github.repository }}/releases/download/${{ steps.vars.outputs.TAG_NAME }}/gustavohps10-redmine-${{ steps.vars.outputs.VERSION }}.tladdon"
           echo "Packing with Download URL: $DOWNLOAD_URL"
           yarn metric validate ./
           yarn metric pkg ./ --download-url "$DOWNLOAD_URL"
+
+      - name: Commit and Push Updated Manifest
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add manifest.yaml
+          git diff --quiet && git diff --staged --quiet || (git commit -m "chore(release): auto-update manifest for ${{ steps.vars.outputs.TAG_NAME }} [skip ci]" && git push origin HEAD:main)
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
@@ -57,6 +70,5 @@ jobs:
           files: |
             *.tladdon
             manifest.yaml
-            installer.yaml
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
