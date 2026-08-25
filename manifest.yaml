@@ -14,7 +14,8 @@ tags:
   - datasource
   - time-entries
 screenshots:
-  - url: 'https://raw.githubusercontent.com/Gustavohps10/redmine-plugin/main/screenshots/overview.jpg'
+  - url: >-
+      https://raw.githubusercontent.com/Gustavohps10/redmine-plugin/main/screenshots/overview.jpg
     caption: Overview
   - url: 'https://raw.githubusercontent.com/Gustavohps10/redmine-plugin/main/screenshots/screenshot-1.png'
     caption: Screenshot 1
