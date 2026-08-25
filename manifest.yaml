@@ -14,8 +14,14 @@ tags:
   - redmine
   - datasource
   - time-entries
+sourceUrl: https://github.com/Gustavohps10/redmine-plugin.git
+iconUrl: >-
+  https://raw.githubusercontent.com/Gustavohps10/redmine-plugin/v0.1.0/src/icon.png
+  https://raw.githubusercontent.com/Gustavohps10/redmine-plugin/v0.1.0/src/icon.png
+  https://raw.githubusercontent.com/Gustavohps10/redmine-plugin/main/src/icon.png
 screenshots:
   - url: >-
+      https://raw.githubusercontent.com/Gustavohps10/redmine-plugin/v0.1.0/screenshots/overview.jpg
       https://raw.githubusercontent.com/Gustavohps10/redmine-plugin/main/screenshots/overview.jpg
     caption: Overview
   - url: >-
