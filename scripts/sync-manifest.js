@@ -15,7 +15,7 @@ let existingManifest = {}
 try {
   existingManifest = yaml.load(fs.readFileSync(manifestPath, 'utf-8')) || {}
 } catch (e) {
-  console.warn('⚠️ Não foi possível ler manifest.yaml como YAML válido, reiniciando objeto.', e.message)
+  console.warn('⚠️ Não foi possível ler manifest.yaml como YAML válido:', e.message)
 }
 
 // 1. Scan /screenshots directory
@@ -40,13 +40,15 @@ if (fs.existsSync(screenshotsDir)) {
   }
 }
 
-console.log(`📸 Encontradas ${screenshots.length} screenshot(s) na pasta /screenshots`)
-
 // 2. Icon URL
 let iconUrl = `https://raw.githubusercontent.com/${repo}/${branch}/src/icon.png`
 if (fs.existsSync(path.resolve('icon.png'))) {
   iconUrl = `https://raw.githubusercontent.com/${repo}/${branch}/icon.png`
 }
+
+// Clone packages & changelog deeply to break any object reference sharing (&ref_0)
+const changelog = existingManifest.changelog ? JSON.parse(JSON.stringify(existingManifest.changelog)) : undefined
+const packages = existingManifest.packages ? JSON.parse(JSON.stringify(existingManifest.packages)) : undefined
 
 // 3. Mount Clean Manifest in standard order
 const cleanManifest = {
@@ -65,6 +67,8 @@ const cleanManifest = {
 
 if (screenshots.length > 0) {
   cleanManifest.screenshots = screenshots
+} else if (existingManifest.screenshots) {
+  cleanManifest.screenshots = existingManifest.screenshots
 }
 
 if (existingManifest.downloadUrl) {
@@ -76,11 +80,11 @@ if (existingManifest.requiredApiVersion) {
 if (existingManifest.releaseDate) {
   cleanManifest.releaseDate = existingManifest.releaseDate
 }
-if (existingManifest.changelog) {
-  cleanManifest.changelog = existingManifest.changelog
+if (changelog) {
+  cleanManifest.changelog = changelog
 }
-if (existingManifest.packages) {
-  cleanManifest.packages = existingManifest.packages
+if (packages) {
+  cleanManifest.packages = packages
 }
 
 const yamlOutput = yaml.dump(cleanManifest, {
@@ -89,4 +93,4 @@ const yamlOutput = yaml.dump(cleanManifest, {
 })
 
 fs.writeFileSync(manifestPath, yamlOutput, 'utf-8')
-console.log('✅ manifest.yaml sincronizado com sucesso no formato oficial!')
+console.log('✅ manifest.yaml formatado com sucesso em linha única!')

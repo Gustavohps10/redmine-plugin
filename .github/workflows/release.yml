@@ -52,6 +52,7 @@ jobs:
           echo "Packing with Download URL: $DOWNLOAD_URL"
           yarn metric validate ./
           yarn metric pkg ./ --download-url "$DOWNLOAD_URL"
+          yarn sync:manifest
 
       - name: Commit and Push Updated Manifest
         run: |
