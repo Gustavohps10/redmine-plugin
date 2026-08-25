@@ -13,10 +13,11 @@ tags:
 sourceUrl: https://github.com/Gustavohps10/redmine-plugin.git
 iconUrl: >-
   https://raw.githubusercontent.com/Gustavohps10/redmine-plugin/v0.1.0/src/icon.png
+  https://raw.githubusercontent.com/Gustavohps10/redmine-plugin/v0.1.0/src/icon.png
   https://raw.githubusercontent.com/Gustavohps10/redmine-plugin/main/src/icon.png
 screenshots:
   - url: >-
-      https://raw.githubusercontent.com/Gustavohps10/redmine-plugin/v0.1.0/screenshots/overview.png
+      https://raw.githubusercontent.com/Gustavohps10/redmine-plugin/v0.1.0/screenshots/overview.jpg
     caption: Overview
   - url: >-
       https://raw.githubusercontent.com/Gustavohps10/redmine-plugin/v0.1.0/screenshots/screenshot-1.png
