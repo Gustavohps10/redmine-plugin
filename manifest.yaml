@@ -6,20 +6,20 @@ categories:
 author: Gustavo Henrique
 shortDescription: Redmine data source for projects and issues
 description: Integration with Redmine to fetch projects, issues, users, and time entries
+iconUrl: >-
+  https://raw.githubusercontent.com/Gustavohps10/redmine-plugin/main/src/icon.png
+sourceUrl: https://github.com/Gustavohps10/redmine-plugin
+homepage: https://github.com/Gustavohps10/redmine-plugin#readme
 tags:
   - redmine
   - datasource
   - time-entries
-sourceUrl: https://github.com/Gustavohps10/redmine-plugin.git
-iconUrl: >-
-  https://raw.githubusercontent.com/Gustavohps10/redmine-plugin/v0.1.0/src/icon.png
-  https://raw.githubusercontent.com/Gustavohps10/redmine-plugin/main/src/icon.png
 screenshots:
   - url: >-
-      https://raw.githubusercontent.com/Gustavohps10/redmine-plugin/v0.1.0/screenshots/overview.png
+      https://raw.githubusercontent.com/Gustavohps10/redmine-plugin/main/screenshots/overview.jpg
     caption: Overview
   - url: >-
-      https://raw.githubusercontent.com/Gustavohps10/redmine-plugin/v0.1.0/screenshots/screenshot-1.png
+      https://raw.githubusercontent.com/Gustavohps10/redmine-plugin/main/screenshots/screenshot-1.png
     caption: Screenshot 1
 downloadUrl: >-
   https://github.com/Gustavohps10/redmine-plugin/releases/download/v0.1.0/gustavohps10-redmine-0.1.0.tladdon
