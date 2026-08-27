@@ -83,7 +83,32 @@ jobs:
 
       - name: Publish to Metric Addons Registry (Cloudflare Worker)
         run: |
-          echo "📡 Publicando automaticamente no catálogo oficial do Metric..."
-          curl -s -X POST https://addons-manifest.gustavoh-santos735.workers.dev \
-            -H "Content-Type: application/json" \
-            -d '{"addonId":"gustavohps10-redmine","manifestUrl":"https://raw.githubusercontent.com/'${{ github.repository }}'/main/manifest.yaml"}'
+          node -e '
+          async function publish() {
+            const payload = {
+              addonId: "gustavohps10-redmine",
+              manifestUrl: "https://raw.githubusercontent.com/${{ github.repository }}/main/manifest.yaml"
+            };
+            console.log("📡 Notificando catálogo oficial do Metric:", payload);
+            const res = await fetch("https://addons-manifest.gustavoh-santos735.workers.dev", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(payload)
+            });
+            const text = await res.text();
+            try {
+              const data = JSON.parse(text);
+              console.log("📦 Resposta do Registry:", data);
+              if (!res.ok || data.error) {
+                throw new Error(data.error || "Falha na publicação");
+              }
+            } catch (err) {
+              if (!res.ok) throw new Error(text);
+              console.log("📦 Resposta:", text);
+            }
+          }
+          publish().catch(err => {
+            console.error("❌ Erro ao publicar:", err.message);
+            process.exit(1);
+          });
+          '
