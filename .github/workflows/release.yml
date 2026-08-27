@@ -61,6 +61,8 @@ jobs:
           git add manifest.yaml
           if ! git diff --staged --quiet; then
             git commit -m "chore(release): auto-update manifest for ${{ steps.vars.outputs.TAG_NAME }} [skip ci]"
+            git fetch origin main
+            git rebase origin/main || true
             git push origin HEAD:main
           else
             echo "Nenhuma alteração no manifest.yaml para commitar."
