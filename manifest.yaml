@@ -20,13 +20,13 @@ screenshots:
     caption: Screenshot 1
 downloadUrl: 'https://github.com/Gustavohps10/redmine-plugin/releases/download/v0.1.0/gustavohps10-redmine-0.1.0.tladdon'
 requiredApiVersion: '>=0.1.0'
-releaseDate: '2026-08-26'
+releaseDate: '2026-08-27'
 changelog:
   - Release 0.1.0
 packages:
   - version: 0.1.0
     requiredApiVersion: '>=0.1.0'
-    releaseDate: '2026-08-26'
+    releaseDate: '2026-08-27'
     downloadUrl: 'https://github.com/Gustavohps10/redmine-plugin/releases/download/v0.1.0/gustavohps10-redmine-0.1.0.tladdon'
     changelog:
       - Release 0.1.0
