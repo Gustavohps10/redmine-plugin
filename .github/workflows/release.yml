@@ -90,7 +90,7 @@ jobs:
               manifestUrl: "https://raw.githubusercontent.com/${{ github.repository }}/main/manifest.yaml"
             };
             console.log("📡 Notificando catálogo oficial do Metric:", payload);
-            const res = await fetch("https://addons-manifest.gustavoh-santos735.workers.dev", {
+            const res = await fetch("https://addons-manifest.gamhora-store.workers.dev", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify(payload)
