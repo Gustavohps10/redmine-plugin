@@ -78,3 +78,10 @@ jobs:
             manifest.yaml
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Publish to Metric Addons Registry (Cloudflare Worker)
+        run: |
+          echo "📡 Publicando automaticamente no catálogo oficial do Metric..."
+          curl -s -X POST https://addons-manifest.gustavoh-santos735.workers.dev \
+            -H "Content-Type: application/json" \
+            -d '{"addonId":"gustavohps10-redmine","manifestUrl":"https://raw.githubusercontent.com/'${{ github.repository }}'/main/manifest.yaml"}'
