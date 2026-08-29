@@ -22,7 +22,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: 'yarn'
 
       - name: Enable Corepack
@@ -54,16 +54,24 @@ jobs:
           yarn pandhora pkg ./ --download-url "$DOWNLOAD_URL"
           yarn sync:manifest
 
-      - name: Commit and Push Updated Manifest
+      - name: Commit and Push Updated Manifest to main
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+          
+          # Salva manifest.yaml atualizado
+          cp manifest.yaml manifest.tmp.yaml
+          
+          # Muda para a branch main
+          git checkout -B main origin/main
+          
+          # Restaura o manifest atualizado
+          mv manifest.tmp.yaml manifest.yaml
           git add manifest.yaml
+          
           if ! git diff --staged --quiet; then
             git commit -m "chore(release): auto-update manifest for ${{ steps.vars.outputs.TAG_NAME }} [skip ci]"
-            git fetch origin main
-            git rebase origin/main || true
-            git push origin HEAD:main
+            git push origin main
           else
             echo "Nenhuma alteração no manifest.yaml para commitar."
           fi
