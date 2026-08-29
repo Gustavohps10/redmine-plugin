@@ -1,7 +1,7 @@
 {
-  "name": "@metric-org/redmine-plugin",
+  "name": "@pandhora/redmine-plugin",
   "version": "0.1.0",
-  "description": "Conector oficial do Redmine para a plataforma Metric.",
+  "description": "Conector oficial do Redmine para a plataforma Pandhora.",
   "author": "Gustavo <gustavoh.santos735@gmail.com>",
   "license": "MIT",
   "changeset": "changeset",
@@ -27,12 +27,12 @@
   "scripts": {
     "build": "tsup --format esm,cjs --dts",
     "clean": "rimraf dist",
-    "manifest": "metric manifest ./",
+    "manifest": "pandhora manifest ./",
     "sync:manifest": "node scripts/sync-manifest.js",
-    "pkg": "metric pkg ./"
+    "pkg": "pandhora pkg ./"
   },
   "dependencies": {
-    "@metric-org/sdk": "^0.1.0",
+    "@pandhora/sdk": "^0.1.0",
     "axios": "^1.7.9"
   },
   "devDependencies": {

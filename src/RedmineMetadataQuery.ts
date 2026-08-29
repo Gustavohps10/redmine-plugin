@@ -1,4 +1,4 @@
-import { IMetadataQuery, MetadataDTO, MetadataItem } from '@metric-org/sdk'
+﻿import { IMetadataQuery, MetadataDTO, MetadataItem } from '@pandhora/sdk'
 
 import { RedmineBase } from '@/RedmineBase'
 
@@ -348,3 +348,4 @@ export class RedmineMetadataQuery
     }
   }
 }
+

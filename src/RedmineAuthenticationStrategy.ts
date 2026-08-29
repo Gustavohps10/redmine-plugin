@@ -1,10 +1,10 @@
-import {
+﻿import {
   AppError,
   AuthenticationResult,
   Either,
   IAuthenticationStrategy,
   MemberDTO,
-} from '@metric-org/sdk'
+} from '@pandhora/sdk'
 import axios, { AxiosInstance } from 'axios'
 
 export interface RedmineConfiguration {
@@ -101,3 +101,4 @@ export class RedmineAuthenticationStrategy implements IAuthenticationStrategy<Re
     }
   }
 }
+

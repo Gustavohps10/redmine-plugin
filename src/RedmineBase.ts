@@ -1,5 +1,5 @@
- 
-import type { DataSourceContext, IHttpClient } from '@metric-org/sdk'
+﻿ 
+import type { DataSourceContext, IHttpClient } from '@pandhora/sdk'
 
 export abstract class RedmineBase {
   protected httpClient: IHttpClient
@@ -28,3 +28,4 @@ export abstract class RedmineBase {
     return this.httpClient
   }
 }
+

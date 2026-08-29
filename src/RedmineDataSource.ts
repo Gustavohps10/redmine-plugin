@@ -1,4 +1,4 @@
-import { DataSourceContext, IDataSource } from '@metric-org/sdk'
+﻿import { DataSourceContext, IDataSource } from '@pandhora/sdk'
 
 import { configurationFieldGroups, credentialFieldGroups } from './configFields'
 import { RedmineAuthenticationStrategy } from './RedmineAuthenticationStrategy'
@@ -46,3 +46,4 @@ export class RedmineDataSource implements IDataSource {
     return new RedmineMetadataQuery(context)
   }
 }
+

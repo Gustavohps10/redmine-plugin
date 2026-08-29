@@ -1,9 +1,9 @@
-import {
+﻿import {
   ITimeEntryQuery,
   PagedResultDTO,
   PaginationOptionsDTO,
   TimeEntryDTO,
-} from '@metric-org/sdk'
+} from '@pandhora/sdk'
 
 import { RedmineBase } from './RedmineBase'
 
@@ -202,3 +202,4 @@ export class RedmineTimeEntryQuery
     throw new Error('Método "exists" não implementado para o conector Redmine.')
   }
 }
+

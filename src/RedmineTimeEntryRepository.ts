@@ -1,4 +1,4 @@
-import { ITimeEntryRepository, TimeEntry } from '@metric-org/sdk'
+﻿import { ITimeEntryRepository, TimeEntry } from '@pandhora/sdk'
 
 import { RedmineBase } from './RedmineBase'
 
@@ -90,3 +90,4 @@ export class RedmineTimeEntryRepository
     })
   }
 }
+

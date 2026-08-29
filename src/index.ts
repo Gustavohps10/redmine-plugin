@@ -1,4 +1,4 @@
-import { AddonContext, AddonSettingsSchema, IAddon } from '@metric-org/sdk'
+﻿import { AddonContext, AddonSettingsSchema, IAddon } from '@pandhora/sdk'
 
 import { redmineSettingsSchema } from './configFields.js'
 import { REDMINE_CSS } from './redmineCss.js'
@@ -156,4 +156,5 @@ export default class RedmineAddon implements IAddon {
     return { isSuccess: false, error: 'Ação desconhecida' }
   }
 }
+
 

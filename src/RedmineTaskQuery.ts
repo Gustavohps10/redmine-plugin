@@ -1,11 +1,11 @@
- 
+﻿ 
 import {
   IHttpClient,
   ITaskQuery,
   PagedResultDTO,
   PaginationOptionsDTO,
   TaskDTO,
-} from '@metric-org/sdk'
+} from '@pandhora/sdk'
 
 import { RedmineBase } from '@/RedmineBase'
 
@@ -525,3 +525,4 @@ export class RedmineTaskQuery extends RedmineBase implements ITaskQuery {
     throw new Error('Method exists RedmineTaskQuery not implemented.')
   }
 }
+

@@ -50,8 +50,8 @@ jobs:
         run: |
           DOWNLOAD_URL="https://github.com/${{ github.repository }}/releases/download/${{ steps.vars.outputs.TAG_NAME }}/gustavohps10-redmine-${{ steps.vars.outputs.VERSION }}.tladdon"
           echo "Packing with Download URL: $DOWNLOAD_URL"
-          yarn metric validate ./
-          yarn metric pkg ./ --download-url "$DOWNLOAD_URL"
+          yarn pandhora validate ./
+          yarn pandhora pkg ./ --download-url "$DOWNLOAD_URL"
           yarn sync:manifest
 
       - name: Commit and Push Updated Manifest
@@ -81,7 +81,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Publish to Metric Addons Registry (Cloudflare Worker)
+      - name: Publish to Pandhora Addons Registry (Cloudflare Worker)
         run: |
           node -e '
           async function publish() {
@@ -89,7 +89,7 @@ jobs:
               addonId: "gustavohps10-redmine",
               manifestUrl: "https://raw.githubusercontent.com/${{ github.repository }}/main/manifest.yaml"
             };
-            console.log("📡 Notificando catálogo oficial do Metric:", payload);
+            console.log("📡 Notificando catálogo oficial da Pandhora:", payload);
             const res = await fetch("https://addons-manifest.gamhora-store.workers.dev", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
