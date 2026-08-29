@@ -71,7 +71,7 @@ yarn sync:manifest
 
 ## 🚀 Publicação Automática (CI/CD)
 
-Ao criar e enviar uma tag de versão, o GitHub Actions realiza o build e publica a release automaticamente:
+Ao criar e enviar uma tag de versão, o GitHub Actions realiza o build, publica a release e notifica o worker `https://addons-manifest.pandhora.workers.dev/`:
 
 ```bash
 git tag v0.1.0
