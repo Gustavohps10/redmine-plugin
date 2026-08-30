@@ -62,8 +62,12 @@ jobs:
           # Salva manifest.yaml atualizado
           cp manifest.yaml manifest.tmp.yaml
           
-          # Muda para a branch main
+          # Limpa alterações locais geradas no build
+          git reset --hard HEAD
+          
+          # Muda para a branch main e sincroniza
           git checkout -B main origin/main
+          git pull origin main --rebase || true
           
           # Restaura o manifest atualizado
           mv manifest.tmp.yaml manifest.yaml
