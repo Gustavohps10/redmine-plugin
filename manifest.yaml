@@ -31,8 +31,8 @@ packages:
     changelog:
       - Release 0.1.1
   - version: 0.1.0
-    requiredApiVersion: '>=0.1.1'
-    releaseDate: '2026-08-30'
-    downloadUrl: https://github.com/Gustavohps10/redmine-plugin/releases/download/v0.1.1/gustavohps10-redmine-0.1.1.tladdon
+    requiredApiVersion: '>=0.1.0'
+    releaseDate: '2026-08-29'
+    downloadUrl: https://github.com/Gustavohps10/redmine-plugin/releases/download/v0.1.0/gustavohps10-redmine-0.1.0.tladdon
     changelog:
       - Release 0.1.0
