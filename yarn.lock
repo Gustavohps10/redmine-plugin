@@ -557,7 +557,7 @@ __metadata:
   resolution: "@pandhora/redmine-plugin@workspace:."
   dependencies:
     "@changesets/cli": "npm:^2.29.6"
-    "@pandhora/sdk": "npm:^0.1.0"
+    "@pandhora/sdk": "npm:^0.1.1"
     "@types/node": "npm:^24.3.0"
     axios: "npm:^1.7.9"
     rimraf: "npm:^6.0.1"
@@ -566,16 +566,16 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@pandhora/sdk@npm:^0.1.0":
-  version: 0.1.0
-  resolution: "@pandhora/sdk@npm:0.1.0"
+"@pandhora/sdk@npm:^0.1.1":
+  version: 0.1.1
+  resolution: "@pandhora/sdk@npm:0.1.1"
   dependencies:
     highlight.js: "npm:^11.11.1"
     textile-js: "npm:^2.1.1"
     turndown: "npm:^7.2.1"
   bin:
     pandhora: dist/cli.cjs
-  checksum: 10c0/0d9e5efddf1d4c60d1356dc3b11e855034070661038b6566010cea38d5505c98a6071171c506258d0d47918a964cc0546938f2bfe73e401b3a6e119f2786fc9b
+  checksum: 10c0/4f591804cbcf883c4c425e348346d2b7e83191368fc72d2cb6dd08bd9e4ea554f6093eabbddd4085cb717dfaae5227c5d72838a75fff3b22a9c6263b0b7d67ca
   languageName: node
   linkType: hard
 

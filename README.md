@@ -64,7 +64,7 @@ yarn build
 yarn pandhora validate ./
 
 # Sincronizar screenshots e links no manifesto
-yarn sync:manifest
+yarn pandhora sync ./
 ```
 
 ---

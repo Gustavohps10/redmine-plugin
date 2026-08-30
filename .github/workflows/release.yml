@@ -44,7 +44,7 @@ jobs:
 
       - name: Auto-Sync Manifest (Screenshots & Dynamic URLs)
         run: |
-          yarn sync:manifest
+          yarn pandhora sync ./
 
       - name: Validate and Package Addon (.tladdon)
         run: |
@@ -52,7 +52,7 @@ jobs:
           echo "Packing with Download URL: $DOWNLOAD_URL"
           yarn pandhora validate ./
           yarn pandhora pkg ./ --download-url "$DOWNLOAD_URL"
-          yarn sync:manifest
+          yarn pandhora sync ./
 
       - name: Commit and Push Updated Manifest to main
         run: |
