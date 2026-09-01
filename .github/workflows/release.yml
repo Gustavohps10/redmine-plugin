@@ -93,7 +93,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Publish to Pandhora Addons Registry (Cloudflare Worker)
+      - name: Publish to Mr. Tick Addons Registry (Cloudflare Worker)
         run: |
           node -e '
           async function publish() {
@@ -101,8 +101,8 @@ jobs:
               addonId: "gustavohps10-redmine",
               manifestUrl: "https://raw.githubusercontent.com/${{ github.repository }}/main/manifest.yaml"
             };
-            console.log("📡 Notificando catálogo oficial da Pandhora:", payload);
-            const res = await fetch("https://addons-manifest.pandhora.workers.dev/", {
+            console.log("📡 Notificando catálogo oficial do Mr. Tick:", payload);
+            const res = await fetch("https://addons-manifest.mistertick.workers.dev/", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify(payload)
