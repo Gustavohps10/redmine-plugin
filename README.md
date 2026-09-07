@@ -2,14 +2,14 @@
   <img src="https://raw.githubusercontent.com/Gustavohps10/redmine-plugin/main/src/icon.png" width="96" height="96" alt="Redmine Logo" />
 </p>
 
-<h1 align="center">Redmine Plugin para Pandhora</h1>
+<h1 align="center">Redmine Plugin para Mr. Tick</h1>
 
 <p align="center">
-  <b>Integração oficial e Fonte de Dados Local-First para gestão de tarefas, apontamento de horas e metadados no Pandhora App.</b>
+  <b>Integração oficial e Fonte de Dados Local-First para gestão de tarefas, apontamento de horas e metadados no Mr. Tick App.</b>
 </p>
 
 <p align="center">
-  <a href="https://github.com/gamhora"><img src="https://img.shields.io/badge/Pandhora%20SDK-%3E%3D0.1.0-blue.svg" alt="Pandhora SDK" /></a>
+  <a href="https://github.com/gamhora"><img src="https://img.shields.io/badge/Mr.%20Tick%20SDK-%3E%3D0.1.0-blue.svg" alt="Mr. Tick SDK" /></a>
   <a href="#"><img src="https://img.shields.io/badge/Category-DataSource-orange.svg" alt="DataSource" /></a>
   <a href="#"><img src="https://img.shields.io/badge/version-0.1.0-green.svg" alt="Version" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License" /></a>
@@ -18,7 +18,7 @@
 <br/>
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/Gustavohps10/redmine-plugin/main/screenshots/screenshot-1.png" width="100%" alt="Interface da Integração Redmine no Pandhora App" />
+  <img src="https://raw.githubusercontent.com/Gustavohps10/redmine-plugin/main/screenshots/screenshot-1.png" width="100%" alt="Interface da Integração Redmine no Mr. Tick App" />
 </p>
 
 <br/>
@@ -30,14 +30,14 @@
 * 🔄 **Replicação Local-First (RxDB):** Sincronização inteligente e offline-first de tarefas via Atom Feed.
 * ⏱️ **Apontamentos com 1 Clique:** Envio de horas trabalhadas direto para os chamados do Redmine com categorização de atividades.
 * 📊 **Metadados Automáticos:** Sincroniza status, prioridades com cores, tipos de tarefas e papéis de membros.
-* 🚀 **Timerbar & Sidebar:** Atalhos na interface do Pandhora para abrir tarefas no navegador e gerar logs rápidos.
-* 🎨 **Tema Clássico:** Visual oficial do Redmine integrado ao modo Claro e Escuro do Pandhora.
+* 🚀 **Timerbar & Sidebar:** Atalhos na interface do Mr. Tick para abrir tarefas no navegador e gerar logs rápidos.
+* 🎨 **Tema Clássico:** Visual oficial do Redmine integrado ao modo Claro e Escuro do Mr. Tick.
 
 ---
 
 ## 🔑 Configurações do Plugin
 
-Configurado nativamente pela interface do Pandhora App:
+Configurado nativamente pela interface do Mr. Tick App:
 
 ```text
 ┌───────────────────────────────┬────────────────────────────────────────────────────────┐
@@ -61,17 +61,17 @@ yarn install
 yarn build
 
 # Validar manifesto do SDK
-yarn pandhora validate ./
+yarn mr-tick validate ./
 
 # Sincronizar screenshots e links no manifesto
-yarn pandhora sync ./
+yarn mr-tick sync ./
 ```
 
 ---
 
 ## 🚀 Publicação Automática (CI/CD)
 
-Ao criar e enviar uma tag de versão, o GitHub Actions realiza o build, publica a release e notifica o worker `https://addons-manifest.pandhora.workers.dev/`:
+Ao criar e enviar uma tag de versão, o GitHub Actions realiza o build, publica a release e notifica o worker `https://addons-manifest.mistertick.workers.dev/`:
 
 ```bash
 git tag v0.1.0
@@ -81,5 +81,5 @@ git push origin v0.1.0
 ---
 
 <p align="center">
-  <sub>Licenciado sob a <a href="LICENSE">MIT License</a>. Feito para o ecossistema Pandhora.</sub>
+  <sub>Licenciado sob a <a href="LICENSE">MIT License</a>. Feito para o ecossistema Mr. Tick.</sub>
 </p>
