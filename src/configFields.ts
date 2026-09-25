@@ -1,4 +1,4 @@
-﻿import { AddonSettingsGroup, AddonSettingsTab } from '@pandhora/sdk'
+import { AddonSettingsGroup, AddonSettingsTab } from '@mr-tick/sdk'
 
 export const credentialFieldGroups: AddonSettingsGroup[] = [
   {
@@ -9,11 +9,13 @@ export const credentialFieldGroups: AddonSettingsGroup[] = [
         id: 'apiKey',
         label: 'Chave de Acesso à API (REST)',
         type: 'password',
+        scope: 'credential',
       },
       {
         id: 'atomKey',
         label: 'Chave de Acesso ao Atom (RSS)',
         type: 'password',
+        scope: 'credential',
       },
     ],
   },
@@ -29,6 +31,7 @@ export const configurationFieldGroups: AddonSettingsGroup[] = [
         label: 'URL da sua instância Redmine',
         type: 'text',
         placeholder: 'https://redmine.suaempresa.com',
+        scope: 'configuration',
       },
     ],
   },

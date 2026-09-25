@@ -1,7 +1,7 @@
 {
-  "name": "@pandhora/redmine-plugin",
-  "version": "0.1.1",
-  "description": "Conector oficial do Redmine para a plataforma Pandhora.",
+  "name": "@mr-tick/redmine-plugin",
+  "version": "0.2.0",
+  "description": "Conector oficial do Redmine para a plataforma Mr. Tick.",
   "author": "Gustavo <gustavoh.santos735@gmail.com>",
   "license": "MIT",
   "changeset": "changeset",
@@ -27,13 +27,14 @@
   "scripts": {
     "build": "tsup --format esm,cjs --dts",
     "clean": "rimraf dist",
-    "manifest": "pandhora manifest ./",
-    "sync": "pandhora sync ./",
-    "sync:manifest": "pandhora sync ./",
-    "pkg": "pandhora pkg ./"
+    "manifest": "mr-tick manifest ./",
+    "sync": "mr-tick sync ./",
+    "sync:manifest": "mr-tick sync ./",
+    "pkg": "mr-tick pkg ./",
+    "test": "vitest run"
   },
   "dependencies": {
-    "@pandhora/sdk": "^0.1.1",
+    "@mr-tick/sdk": "^0.4.0",
     "axios": "^1.7.9"
   },
   "devDependencies": {
@@ -41,7 +42,8 @@
     "@types/node": "^24.3.0",
     "rimraf": "^6.0.1",
     "tsup": "^8.5.0",
-    "typescript": "^5.8.3"
+    "typescript": "^5.8.3",
+    "vitest": "^3.0.0"
   },
   "packageManager": "yarn@4.9.4"
 }

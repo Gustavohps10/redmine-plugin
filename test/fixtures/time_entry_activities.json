@@ -1,0 +1,19 @@
+{
+  "time_entry_activities": [
+    {
+      "id": 8,
+      "name": "Design",
+      "is_default": false
+    },
+    {
+      "id": 9,
+      "name": "Desenvolvimento",
+      "is_default": true
+    },
+    {
+      "id": 10,
+      "name": "Gestão",
+      "is_default": false
+    }
+  ]
+}
