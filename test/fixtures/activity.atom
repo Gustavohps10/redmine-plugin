@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <title>Redmine: Atividades</title>
+  <link rel="self" href="https://redmine.test/activity.atom"/>
+  <updated>2026-09-25T11:45:00Z</updated>
+  <entry>
+    <title>Projeto Alpha - Defeito #201 (Em Andamento): Corrigir memory leak no worker</title>
+    <link rel="alternate" href="https://redmine.test/issues/201"/>
+    <id>https://redmine.test/issues/201</id>
+    <updated>2026-09-25T11:45:00Z</updated>
+    <author>
+      <name>Redmine Admin</name>
+    </author>
+    <content type="html">Foi identificado consumo excessivo de RAM no worker.</content>
+  </entry>
+</feed>

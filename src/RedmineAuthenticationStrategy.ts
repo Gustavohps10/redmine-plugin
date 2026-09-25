@@ -1,104 +1,64 @@
-﻿import {
+import {
   AppError,
   AuthenticationResult,
   Either,
   IAuthenticationStrategy,
   MemberDTO,
-} from '@pandhora/sdk'
-import axios, { AxiosInstance } from 'axios'
+} from '@mr-tick/sdk'
 
-export interface RedmineConfiguration {
+import { RedmineClient } from './RedmineClient.js'
+
+export interface RedmineAuthCredentials {
+  apiKey: string
+  atomKey?: string
+}
+
+export interface RedmineAuthConfiguration {
   apiUrl: string
 }
 
-export interface RedmineCredentials {
-  apiKey: string
-  atomKey: string
-}
-
 export interface RedmineAuthInput {
-  configuration: RedmineConfiguration
-  credentials: RedmineCredentials
+  configuration?: RedmineAuthConfiguration
+  credentials?: RedmineAuthCredentials
 }
 
-interface RedmineUserAPIResponse {
-  id: number
-  login: string
-  admin: boolean
-  firstname: string
-  lastname: string
-  mail: string
-  created_on: string
-  last_login_on: string
-  api_key: string
-  custom_fields: {
-    id: number
-    name: string
-    value: string
-  }[]
-}
-
-interface RedmineUserResponse {
-  user: RedmineUserAPIResponse
-}
-
-export class RedmineAuthenticationStrategy implements IAuthenticationStrategy<RedmineAuthInput> {
-  private getApiClient(apiUrl: string): AxiosInstance {
-    return axios.create({ baseURL: apiUrl })
-  }
+export class RedmineAuthenticationStrategy
+  implements IAuthenticationStrategy<RedmineAuthInput>
+{
+  constructor(private readonly client: RedmineClient) {}
 
   async authenticate(
-    input: RedmineAuthInput,
+    input?: RedmineAuthInput,
   ): Promise<Either<AppError, AuthenticationResult>> {
-    try {
-      const { configuration, credentials } = input
+    const userResult = await this.client.getCurrentUser()
+    if (userResult.isFailure()) return userResult.forwardFailure()
 
-      if (!credentials?.apiKey || !credentials?.atomKey) {
-        return Either.failure(
-          AppError.ValidationError(
-            'Chave de Acesso à API e Chave de Acesso ao Atom são obrigatórias.',
-          ),
-        )
-      }
+    const redmineUser = userResult.success.user
 
-      const apiClient = this.getApiClient(configuration.apiUrl)
-
-      const response = await apiClient.get<RedmineUserResponse>(
-        '/users/current.json',
-        {
-          headers: { 'X-Redmine-API-Key': credentials.apiKey },
-        },
-      )
-
-      const redmineUser = response.data.user
-
-      const member: MemberDTO = {
-        id: redmineUser.id,
-        login: redmineUser.login,
-        firstname: redmineUser.firstname,
-        lastname: redmineUser.lastname,
-        admin: redmineUser.admin,
-        createdOn: redmineUser.created_on,
-        lastLoginOn: redmineUser.last_login_on,
-        customFields: redmineUser.custom_fields,
-      }
-
-      const authenticationResult: AuthenticationResult = {
-        member: member,
-        credentials: {
-          apiKey: credentials.apiKey,
-          atomKey: credentials.atomKey,
-        },
-      }
-
-      return Either.success(authenticationResult)
-    } catch {
-      return Either.failure(
-        AppError.Unauthorized(
-          'Não foi possível autenticar com Redmine. Verifique suas chaves de acesso e a URL.',
-        ),
-      )
+    const member: MemberDTO = {
+      id: redmineUser.id,
+      login: redmineUser.login,
+      firstname: redmineUser.firstname,
+      lastname: redmineUser.lastname,
+      admin: Boolean(redmineUser.admin),
+      createdOn: redmineUser.created_on,
+      lastLoginOn: redmineUser.last_login_on
+        ? redmineUser.last_login_on
+        : redmineUser.created_on,
+      customFields: redmineUser.custom_fields
+        ? redmineUser.custom_fields
+        : [],
     }
+
+    const credentialsRecord: Record<string, string> = {}
+    const apiKey = input?.credentials?.apiKey
+    if (apiKey) credentialsRecord.apiKey = apiKey
+    const atomKey = input?.credentials?.atomKey
+    if (atomKey) credentialsRecord.atomKey = atomKey
+
+    return Either.success({
+      member,
+      credentials: credentialsRecord,
+    })
   }
 }
-

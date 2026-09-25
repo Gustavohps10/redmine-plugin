@@ -1,0 +1,16 @@
+{
+  "trackers": [
+    {
+      "id": 1,
+      "name": "Defeito"
+    },
+    {
+      "id": 2,
+      "name": "Recurso"
+    },
+    {
+      "id": 3,
+      "name": "Suporte"
+    }
+  ]
+}

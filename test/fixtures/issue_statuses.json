@@ -1,0 +1,24 @@
+{
+  "issue_statuses": [
+    {
+      "id": 1,
+      "name": "Nova",
+      "is_closed": false
+    },
+    {
+      "id": 2,
+      "name": "Em Andamento",
+      "is_closed": false
+    },
+    {
+      "id": 3,
+      "name": "Resolvida",
+      "is_closed": false
+    },
+    {
+      "id": 5,
+      "name": "Fechada",
+      "is_closed": true
+    }
+  ]
+}

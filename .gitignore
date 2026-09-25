@@ -12,3 +12,4 @@ out
 !.yarn/sdks
 !.yarn/versions
 .pnp.*
+*.tsbuildinfo

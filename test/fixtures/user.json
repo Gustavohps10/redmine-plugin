@@ -1,0 +1,20 @@
+{
+  "user": {
+    "id": 1,
+    "login": "admin",
+    "admin": true,
+    "firstname": "Redmine",
+    "lastname": "Admin",
+    "mail": "admin@example.com",
+    "created_on": "2026-01-01T00:00:00Z",
+    "last_login_on": "2026-09-25T10:00:00Z",
+    "api_key": "mock-api-key-123",
+    "custom_fields": [
+      {
+        "id": 1,
+        "name": "Cargo",
+        "value": "Tech Lead"
+      }
+    ]
+  }
+}
