@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/mr-tick-community"><img src="https://img.shields.io/badge/Mr--Tick%20SDK-%3E%3D0.4.0-blue.svg" alt="Mr-Tick SDK" /></a>
+  <a href="https://github.com/mistertick"><img src="https://img.shields.io/badge/Mr--Tick%20SDK-%3E%3D0.4.0-blue.svg" alt="Mr-Tick SDK" /></a>
   <a href="#"><img src="https://img.shields.io/badge/Category-DataSource-orange.svg" alt="DataSource" /></a>
   <a href="#"><img src="https://img.shields.io/badge/version-0.2.0-green.svg" alt="Version" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License" /></a>
