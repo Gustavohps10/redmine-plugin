@@ -1,18 +1,51 @@
-name: Release & Package Addon
+name: CI/CD Pipeline
 
 on:
+  pull_request:
+    branches:
+      - main
   push:
-    tags:
-      - 'v*'
+    branches:
+      - main
 
 permissions:
   contents: write
+  pull-requests: write
 
 jobs:
-  release:
-    name: Build, Package and Release Addon
+  test:
+    name: Test & Build
     runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'yarn'
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Install Dependencies
+        run: yarn install
+
+      - name: Typecheck
+        run: yarn tsc --noEmit
+
+      - name: Run Unit Tests
+        run: yarn test
+
+      - name: Build TypeScript
+        run: yarn build
+
+  release:
+    name: Release & Version
+    needs: test
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -31,59 +64,71 @@ jobs:
       - name: Install Dependencies
         run: yarn install
 
-      - name: Build TypeScript
-        run: yarn build
+      - name: Changesets Action (Create PR or Version Packages)
+        id: changesets
+        uses: changesets/action@v1
+        with:
+          version: yarn changeset version
+          title: 'chore: release packages'
+          commit: 'chore: version packages'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Extract Tag & Version
-        id: vars
+      - name: Check if Release Needed
+        id: check_release
+        if: steps.changesets.outputs.hasChangesets == 'false'
         run: |
-          TAG_NAME=${GITHUB_REF_NAME}
-          VERSION=${TAG_NAME#v}
-          echo "VERSION=${VERSION}" >> $GITHUB_OUTPUT
-          echo "TAG_NAME=${TAG_NAME}" >> $GITHUB_OUTPUT
+          VERSION=$(node -p "require('./package.json').version")
+          TAG_NAME="v$VERSION"
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+          echo "TAG_NAME=$TAG_NAME" >> $GITHUB_OUTPUT
+          
+          if gh release view "$TAG_NAME" >/dev/null 2>&1; then
+            echo "has_release=false" >> $GITHUB_OUTPUT
+            echo "Release $TAG_NAME already exists."
+          else
+            echo "has_release=true" >> $GITHUB_OUTPUT
+            echo "Release $TAG_NAME does not exist, creating..."
+          fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Auto-Sync Manifest (Screenshots & Dynamic URLs)
+      - name: Package Addon (.tladdon) and Sync Manifest
+        if: steps.changesets.outputs.hasChangesets == 'false' && steps.check_release.outputs.has_release == 'true'
         run: |
-          yarn pandhora sync ./
-
-      - name: Validate and Package Addon (.tladdon)
-        run: |
-          DOWNLOAD_URL="https://github.com/${{ github.repository }}/releases/download/${{ steps.vars.outputs.TAG_NAME }}/gustavohps10-redmine-${{ steps.vars.outputs.VERSION }}.tladdon"
-          echo "Packing with Download URL: $DOWNLOAD_URL"
-          yarn pandhora validate ./
-          yarn pandhora pkg ./ --download-url "$DOWNLOAD_URL"
-          yarn pandhora sync ./
+          TAG_NAME="${{ steps.check_release.outputs.TAG_NAME }}"
+          VERSION="${{ steps.check_release.outputs.VERSION }}"
+          DOWNLOAD_URL="https://github.com/${{ github.repository }}/releases/download/${TAG_NAME}/gustavohps10-redmine-${VERSION}.tladdon"
+          
+          yarn build
+          yarn sync:manifest
+          yarn pkg --download-url "$DOWNLOAD_URL"
+          yarn sync:manifest
 
       - name: Commit and Push Updated Manifest to main
+        if: steps.changesets.outputs.hasChangesets == 'false' && steps.check_release.outputs.has_release == 'true'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           
-          # Salva manifest.yaml atualizado
           cp manifest.yaml manifest.tmp.yaml
-          
-          # Limpa alterações locais geradas no build
           git reset --hard HEAD
-          
-          # Muda para a branch main e sincroniza
           git checkout -B main origin/main
           git pull origin main --rebase || true
-          
-          # Restaura o manifest atualizado
           mv manifest.tmp.yaml manifest.yaml
           git add manifest.yaml
           
           if ! git diff --staged --quiet; then
-            git commit -m "chore(release): auto-update manifest for ${{ steps.vars.outputs.TAG_NAME }} [skip ci]"
+            git commit -m "chore(release): auto-update manifest for ${{ steps.check_release.outputs.TAG_NAME }} [skip ci]"
             git push origin main
-          else
-            echo "Nenhuma alteração no manifest.yaml para commitar."
           fi
 
       - name: Create GitHub Release
+        if: steps.changesets.outputs.hasChangesets == 'false' && steps.check_release.outputs.has_release == 'true'
         uses: softprops/action-gh-release@v2
         with:
-          name: Release ${{ steps.vars.outputs.TAG_NAME }}
+          tag_name: ${{ steps.check_release.outputs.TAG_NAME }}
+          name: Release ${{ steps.check_release.outputs.TAG_NAME }}
           draft: false
           prerelease: false
           generate_release_notes: true
@@ -94,6 +139,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Publish to Mr. Tick Addons Registry (Cloudflare Worker)
+        if: steps.changesets.outputs.hasChangesets == 'false' && steps.check_release.outputs.has_release == 'true'
         run: |
           node -e '
           async function publish() {
