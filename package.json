@@ -1,6 +1,6 @@
 {
   "name": "@mr-tick/redmine-plugin",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "Conector oficial do Redmine para a plataforma Mr. Tick.",
   "author": "Gustavo <gustavoh.santos735@gmail.com>",
   "license": "MIT",
