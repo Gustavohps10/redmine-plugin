@@ -51,17 +51,10 @@ export const configurationFieldGroups: AddonSettingsGroup[] = [
           { label: 'Redmine 6.x', value: '6.0' },
         ],
       },
-      {
-        id: 'metadataMappings',
-        label: 'Mapeamento de Entidades e Custom Fields',
-        type: 'mapping',
-        scope: 'configuration',
-        description:
-          'Configure ícones e cores para status, atividades e campos customizados descobertos na sua instância.',
-      },
     ],
   },
 ]
+
 
 export const customFieldGroups: AddonSettingsGroup[] = [
   {
