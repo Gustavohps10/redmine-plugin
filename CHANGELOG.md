@@ -1,5 +1,11 @@
 # @timelapse/redmine-plugin
 
+## 0.3.0
+
+### Minor Changes
+
+- f662bf3: Adiciona suporte multi-versão ao Redmine (3.4, 5.0 e 6.0), organização modular de pastas em datasource/versions, matriz de testes de integração com Docker e pipeline de CI/CD automatizada no GitHub Actions.
+
 ## 0.2.0
 
 ### Minor Changes
