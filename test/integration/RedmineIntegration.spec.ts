@@ -1,4 +1,4 @@
-import { MetadataItem } from '@mr-tick/sdk'
+import { MappingFieldDefinition, MetadataItem } from '@mr-tick/sdk'
 import { describe, expect, it } from 'vitest'
 
 import { RedmineClient } from '../../src/client/RedmineClient'
@@ -356,11 +356,21 @@ describe.each(instances)('Redmine Docker Integration Matrix: $name', ({ url: API
     expect(result.isSuccess()).toBe(true)
     if (result.isSuccess()) {
       const fields = result.success
-      const statusFields = fields.filter((f) => f.category === 'status')
-      const activityFields = fields.filter((f) => f.category === 'activity')
-      const priorityFields = fields.filter((f) => f.category === 'priority')
-      const trackerFields = fields.filter((f) => f.category === 'tracker')
-      const customFields = fields.filter((f) => f.category === 'custom')
+      const statusFields = fields.filter(
+        (field: MappingFieldDefinition) => field.category === 'status',
+      )
+      const activityFields = fields.filter(
+        (field: MappingFieldDefinition) => field.category === 'activity',
+      )
+      const priorityFields = fields.filter(
+        (field: MappingFieldDefinition) => field.category === 'priority',
+      )
+      const trackerFields = fields.filter(
+        (field: MappingFieldDefinition) => field.category === 'tracker',
+      )
+      const customFields = fields.filter(
+        (field: MappingFieldDefinition) => field.category === 'custom',
+      )
 
       expect(statusFields.length).toBeGreaterThan(0)
       expect(activityFields.length).toBeGreaterThan(0)
@@ -369,7 +379,9 @@ describe.each(instances)('Redmine Docker Integration Matrix: $name', ({ url: API
 
       // Valida que os custom fields reais do Redmine foram descobertos
       expect(customFields.length).toBeGreaterThan(0)
-      const fieldNames = customFields.map((cf) => cf.name)
+      const fieldNames = customFields.map(
+        (field: MappingFieldDefinition) => field.name,
+      )
       expect(fieldNames).toContain('Tipo de Demanda')
     }
   })
@@ -388,11 +400,15 @@ describe.each(instances)('Redmine Docker Integration Matrix: $name', ({ url: API
     expect(result.isSuccess()).toBe(true)
     if (result.isSuccess()) {
       const fields = result.success
-      const customFields = fields.filter((f) => f.category === 'custom')
+      const customFields = fields.filter(
+        (field: MappingFieldDefinition) => field.category === 'custom',
+      )
 
       // O usuário comum (Carlos) descobre perfeitamente os custom fields das tarefas em que atua
       expect(customFields.length).toBeGreaterThan(0)
-      const fieldNames = customFields.map((cf) => cf.name)
+      const fieldNames = customFields.map(
+        (field: MappingFieldDefinition) => field.name,
+      )
       expect(fieldNames).toContain('Tipo de Demanda')
     }
   })

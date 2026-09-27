@@ -1,3 +1,4 @@
+import { MappingFieldDefinition } from '@mr-tick/sdk'
 import { describe, expect, it } from 'vitest'
 
 import { RedmineClient } from '../src/client/RedmineClient'
@@ -107,11 +108,21 @@ describe('RedmineMetadataProvider', () => {
     expect(result.isSuccess()).toBe(true)
     if (result.isSuccess()) {
       const fields = result.success
-      const statusFields = fields.filter((f) => f.category === 'status')
-      const activityFields = fields.filter((f) => f.category === 'activity')
-      const priorityFields = fields.filter((f) => f.category === 'priority')
-      const trackerFields = fields.filter((f) => f.category === 'tracker')
-      const customFields = fields.filter((f) => f.category === 'custom')
+      const statusFields = fields.filter(
+        (field: MappingFieldDefinition) => field.category === 'status',
+      )
+      const activityFields = fields.filter(
+        (field: MappingFieldDefinition) => field.category === 'activity',
+      )
+      const priorityFields = fields.filter(
+        (field: MappingFieldDefinition) => field.category === 'priority',
+      )
+      const trackerFields = fields.filter(
+        (field: MappingFieldDefinition) => field.category === 'tracker',
+      )
+      const customFields = fields.filter(
+        (field: MappingFieldDefinition) => field.category === 'custom',
+      )
 
       expect(statusFields.length).toBe(4)
       expect(activityFields.length).toBe(3)
