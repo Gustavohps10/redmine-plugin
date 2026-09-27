@@ -14,24 +14,75 @@ import {
   RedmineTrackerAPI,
 } from '../../../types/redmine'
 
-const activityIconMap: Record<string, string> = {
-  '8': 'Palette',
-  '9': 'Code',
-  '10': 'BarChart2',
-  '11': 'CalendarCheck',
-  '12': 'CheckCircle',
-  '13': 'FlaskConical',
-  '14': 'SearchCode',
-  '15': 'Settings',
-  '16': 'Wrench',
-  '17': 'LifeBuoy',
-  '18': 'Handshake',
-  '19': 'ClipboardCheck',
-  '25': 'FileText',
-  '26': 'GraduationCap',
-  '27': 'Users',
-  '28': 'Briefcase',
-  '30': 'ShieldCheck',
+function resolveActivityIcon(name: string): string {
+  const normalized = name.toLowerCase()
+  if (
+    normalized.includes('desenvolv') ||
+    normalized.includes('dev') ||
+    normalized.includes('código') ||
+    normalized.includes('code')
+  )
+    return 'Code'
+  if (
+    normalized.includes('reuni') ||
+    normalized.includes('meet') ||
+    normalized.includes('alinhamento') ||
+    normalized.includes('call')
+  )
+    return 'CalendarCheck'
+  if (
+    normalized.includes('test') ||
+    normalized.includes('qa') ||
+    normalized.includes('homolog') ||
+    normalized.includes('valida')
+  )
+    return 'FlaskConical'
+  if (
+    normalized.includes('design') ||
+    normalized.includes('ui') ||
+    normalized.includes('ux') ||
+    normalized.includes('layout')
+  )
+    return 'Palette'
+  if (
+    normalized.includes('doc') ||
+    normalized.includes('artigo') ||
+    normalized.includes('especifica')
+  )
+    return 'FileText'
+  if (
+    normalized.includes('gest') ||
+    normalized.includes('manag') ||
+    normalized.includes('planeja') ||
+    normalized.includes('scrum')
+  )
+    return 'Briefcase'
+  if (
+    normalized.includes('bug') ||
+    normalized.includes('correç') ||
+    normalized.includes('fix')
+  )
+    return 'Wrench'
+  if (
+    normalized.includes('review') ||
+    normalized.includes('revis') ||
+    normalized.includes('pr')
+  )
+    return 'SearchCode'
+  if (
+    normalized.includes('suporte') ||
+    normalized.includes('atend') ||
+    normalized.includes('help')
+  )
+    return 'LifeBuoy'
+  if (
+    normalized.includes('deploy') ||
+    normalized.includes('release') ||
+    normalized.includes('ops') ||
+    normalized.includes('infra')
+  )
+    return 'Settings'
+  return 'Tag'
 }
 
 const defaultColors = {
@@ -58,22 +109,19 @@ export class RedmineMetadataProvider implements IMetadataProvider {
 
     const activities: MetadataItem[] = activitiesResult.isSuccess()
       ? activitiesResult.success.time_entry_activities.map(
-          (activity: RedmineActivityAPI) => {
-            const icon = activityIconMap[String(activity.id)]
-            return {
-              id: String(activity.id),
-              name: activity.name,
-              icon: icon ? icon : 'Tag',
-              colors: defaultColors,
-            }
-          },
+          (activity: RedmineActivityAPI) => ({
+            id: String(activity.id),
+            name: activity.name,
+            icon: resolveActivityIcon(activity.name),
+            colors: defaultColors,
+          }),
         )
       : []
 
     const taskStatuses: MetadataItem[] = statusesResult.isSuccess()
       ? statusesResult.success.issue_statuses.map(
           (status: RedmineStatusAPI) => {
-            const uiConfig = this.getStatusUiConfig(status.id)
+            const uiConfig = this.getStatusUiConfig(status)
             return {
               id: String(status.id),
               name: status.name,
@@ -156,46 +204,74 @@ export class RedmineMetadataProvider implements IMetadataProvider {
     })
   }
 
-  private getStatusUiConfig(statusId: number): {
+  private getStatusUiConfig(status: RedmineStatusAPI): {
     icon: string
     colors: { badge: string; background: string; text: string }
   } {
-    switch (statusId) {
-      case 1:
-        return {
-          icon: 'CircleDot',
-          colors: { badge: '#3B82F6', background: '#DBEAFE', text: '#1E40AF' },
-        }
-      case 2:
-        return {
-          icon: 'PlayCircle',
-          colors: { badge: '#F59E0B', background: '#FEF3C7', text: '#78350F' },
-        }
-      case 3:
-        return {
-          icon: 'CheckCircle2',
-          colors: { badge: '#22C55E', background: '#D1FAE5', text: '#166534' },
-        }
-      case 4:
-        return {
-          icon: 'HelpCircle',
-          colors: { badge: '#A78BFA', background: '#EDE9FE', text: '#5B21B6' },
-        }
-      case 5:
-        return {
-          icon: 'Archive',
-          colors: { badge: '#64748B', background: '#F1F5F9', text: '#334155' },
-        }
-      case 6:
-        return {
-          icon: 'XCircle',
-          colors: { badge: '#EF4444', background: '#FEE2E2', text: '#991B1B' },
-        }
-      default:
-        return {
-          icon: 'Circle',
-          colors: defaultColors,
-        }
+    if (status.is_closed) {
+      return {
+        icon: 'CheckCircle2',
+        colors: { badge: '#22C55E', background: '#D1FAE5', text: '#166534' },
+      }
+    }
+
+    const normalized = status.name.toLowerCase()
+    if (
+      normalized.includes('andamento') ||
+      normalized.includes('progress') ||
+      normalized.includes('execu') ||
+      normalized.includes('doing') ||
+      normalized.includes('fazendo')
+    ) {
+      return {
+        icon: 'PlayCircle',
+        colors: { badge: '#F59E0B', background: '#FEF3C7', text: '#78350F' },
+      }
+    }
+
+    if (
+      normalized.includes('bloque') ||
+      normalized.includes('imped') ||
+      normalized.includes('cancel') ||
+      normalized.includes('rejeit') ||
+      normalized.includes('parado')
+    ) {
+      return {
+        icon: 'XCircle',
+        colors: { badge: '#EF4444', background: '#FEE2E2', text: '#991B1B' },
+      }
+    }
+
+    if (
+      normalized.includes('revis') ||
+      normalized.includes('review') ||
+      normalized.includes('homolog') ||
+      normalized.includes('test') ||
+      normalized.includes('qa')
+    ) {
+      return {
+        icon: 'HelpCircle',
+        colors: { badge: '#A78BFA', background: '#EDE9FE', text: '#5B21B6' },
+      }
+    }
+
+    if (
+      normalized.includes('novo') ||
+      normalized.includes('nova') ||
+      normalized.includes('open') ||
+      normalized.includes('abert') ||
+      normalized.includes('triagem') ||
+      normalized.includes('backlog')
+    ) {
+      return {
+        icon: 'CircleDot',
+        colors: { badge: '#3B82F6', background: '#DBEAFE', text: '#1E40AF' },
+      }
+    }
+
+    return {
+      icon: 'Circle',
+      colors: defaultColors,
     }
   }
 }

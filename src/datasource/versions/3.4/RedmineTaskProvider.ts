@@ -93,7 +93,7 @@ class AtomTaskMatcher {
     const issueId = issueIdMatch[1]
 
     const statusMatch = entry.title.match(/\((.*?)\):/)
-    const currentStatusName = statusMatch ? statusMatch[1].trim() : 'Nova'
+    const currentStatusName = statusMatch ? statusMatch[1].trim() : ''
 
     const titleParts = entry.title.split('): ')
     const cleanTitle =

@@ -37,11 +37,14 @@ export class RedmineDataSource implements IDataSource {
       membersProvider: providers.member,
       metadataProvider: providers.metadata,
       testConnection: async () => {
+        const startTime = Date.now()
         const userResult = await client.getCurrentUser()
+        const latencyMs = Date.now() - startTime
         if (userResult.isFailure()) {
           return Either.success({
             ok: false,
             message: userResult.failure.messageKey,
+            latencyMs,
           })
         }
 
@@ -49,7 +52,7 @@ export class RedmineDataSource implements IDataSource {
         return Either.success({
           ok: true,
           message: `Conectado com sucesso como ${user.firstname} ${user.lastname}`,
-          latencyMs: 150,
+          latencyMs,
         })
       },
     }
