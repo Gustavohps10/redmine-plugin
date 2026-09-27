@@ -240,14 +240,63 @@ export class RedmineTaskProvider implements ITaskProvider {
       }
     }
 
-    const resultTasks = Array.from(tasksMap.values())
+    const candidateTasks = Array.from(tasksMap.values())
       .sort(
         (a: TaskDTO, b: TaskDTO) =>
           a.updatedAt.getTime() - b.updatedAt.getTime(),
       )
       .slice(0, batch)
 
-    return Either.success(resultTasks)
+    if (candidateTasks.length === 0) return Either.success([])
+
+    const candidateIds = candidateTasks.map((task: TaskDTO) => task.id)
+    const enrichedTasksRes = await this.fetchEnrichedTasks(candidateIds)
+    if (enrichedTasksRes.isSuccess() && enrichedTasksRes.success.length > 0) {
+      const enrichedMap = new Map<string, TaskDTO>()
+      for (const task of enrichedTasksRes.success) {
+        enrichedMap.set(task.id, task)
+      }
+
+      const mergedTasks: TaskDTO[] = []
+      for (const candidate of candidateTasks) {
+        const enriched = enrichedMap.get(candidate.id)
+        if (enriched) mergedTasks.push(enriched)
+        if (!enriched) mergedTasks.push(candidate)
+      }
+
+      return Either.success(
+        mergedTasks.sort(
+          (a: TaskDTO, b: TaskDTO) =>
+            a.updatedAt.getTime() - b.updatedAt.getTime(),
+        ),
+      )
+    }
+
+    return Either.success(candidateTasks)
+  }
+
+  private async fetchEnrichedTasks(
+    issueIds: string[],
+  ): Promise<Either<AppError, TaskDTO[]>> {
+    const tasks: TaskDTO[] = []
+    const BATCH_SIZE = 100
+
+    for (let i = 0; i < issueIds.length; i += BATCH_SIZE) {
+      const chunk = issueIds.slice(i, i + BATCH_SIZE)
+      const issuesRes = await this.client.listIssues({
+        issue_id: chunk.join(','),
+        status_id: '*',
+        limit: String(BATCH_SIZE),
+      })
+
+      if (issuesRes.isFailure()) return issuesRes.forwardFailure()
+
+      for (const issue of issuesRes.success.issues) {
+        tasks.push(this.mapIssueToTaskDTO(issue))
+      }
+    }
+
+    return Either.success(tasks)
   }
 
   private async pullViaRest(

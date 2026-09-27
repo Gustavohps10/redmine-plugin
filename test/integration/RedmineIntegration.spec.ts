@@ -69,6 +69,30 @@ describe.each(instances)('Redmine Docker Integration Matrix: $name', ({ url: API
     }
   })
 
+  it('deve rejeitar autenticacao quando a Atom Key for abobrinha ou invalida', async () => {
+    const httpClient = new AxiosHttpClient()
+    const client = new RedmineClient(httpClient, {
+      apiUrl: API_URL,
+      apiKey: API_KEY,
+      atomKey: 'abobrinha',
+    })
+
+    const authStrategy = new RedmineAuthenticationStrategy(client)
+    const result = await authStrategy.authenticate({
+      credentials: {
+        apiKey: API_KEY,
+        atomKey: 'abobrinha',
+      },
+    })
+
+    expect(result.isFailure()).toBe(true)
+    if (result.isFailure()) {
+      expect(result.failure.messageKey).toBe(
+        'Chave de acesso ao feed Atom inválida.',
+      )
+    }
+  })
+
   it('deve consultar informacoes do membro atual via RedmineMemberProvider', async () => {
     const httpClient = new AxiosHttpClient()
     const client = new RedmineClient(httpClient, {
@@ -122,7 +146,7 @@ describe.each(instances)('Redmine Docker Integration Matrix: $name', ({ url: API
     }
   })
 
-  it('deve sincronizar tarefas via Atom Feed usando a Atom Key real', async () => {
+  it('deve sincronizar tarefas via Atom Feed usando a Atom Key real e enriquecer com REST API', async () => {
     const httpClient = new AxiosHttpClient()
     const client = new RedmineClient(httpClient, {
       apiUrl: API_URL,
@@ -145,6 +169,8 @@ describe.each(instances)('Redmine Docker Integration Matrix: $name', ({ url: API
       expect(firstTask.title.length).toBeGreaterThan(0)
       expect(firstTask.projectName).toBeDefined()
       expect(firstTask.status?.name).toBeDefined()
+      expect(firstTask.status?.id).not.toBe('0')
+      expect(firstTask.description).toBeDefined()
     }
   })
 

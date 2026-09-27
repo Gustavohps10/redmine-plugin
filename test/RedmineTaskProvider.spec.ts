@@ -179,4 +179,79 @@ describe('RedmineTaskProvider', () => {
       expect(result.success[0].author?.name).toBe('Redmine Admin')
     }
   })
+
+  it('deve enriquecer tarefas do feed Atom com detalhes completos da REST API', async () => {
+    const httpClient = new MockHttpClient()
+    const atomXml = `<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <title>Redmine: Atividades</title>
+  <updated>2026-09-25T11:45:00Z</updated>
+  <entry>
+    <title>Projeto Alpha - Defeito #201 (Em Andamento): Corrigir memory leak no worker</title>
+    <id>https://redmine.test/issues/201</id>
+    <updated>2026-09-25T11:45:00Z</updated>
+    <author>
+      <name>Redmine Admin</name>
+    </author>
+  </entry>
+</feed>`
+
+    httpClient.setRoute('GET', '/users/1.json', 200, {
+      user: { id: 1, login: 'admin', firstname: 'Redmine', lastname: 'Admin' },
+    })
+    httpClient.setRoute('GET', 'activity.atom', 200, atomXml)
+    httpClient.setRoute('GET', '/issues.json', 200, {
+      issues: [
+        {
+          id: 201,
+          subject: 'Corrigir memory leak no worker',
+          description: 'Descricao rica completa recuperada da API REST.',
+          project: { id: 1, name: 'Projeto Alpha' },
+          tracker: { id: 1, name: 'Bug' },
+          status: { id: 2, name: 'Em Andamento' },
+          priority: { id: 4, name: 'Urgente' },
+          author: { id: 1, name: 'Redmine Admin' },
+          assigned_to: { id: 1, name: 'Redmine Admin' },
+          start_date: '2026-09-25',
+          due_date: '2026-09-30',
+          done_ratio: 50,
+          spent_hours: 4.5,
+          created_on: '2026-09-25T10:00:00Z',
+          updated_on: '2026-09-25T11:45:00Z',
+        },
+      ],
+      total_count: 1,
+    })
+
+    const client = new RedmineClient(httpClient, {
+      apiUrl: 'https://redmine.test',
+      apiKey: 'test-key',
+      atomKey: 'testatomkeyredmine1234567890abcdef',
+    })
+
+    const provider = new RedmineTaskProvider(client)
+
+    const result = await provider.pull(
+      '1',
+      { updatedAt: new Date(0), id: '0' },
+      10,
+    )
+
+    expect(result.isSuccess()).toBe(true)
+    if (result.isSuccess()) {
+      expect(result.success.length).toBe(1)
+      const task = result.success[0]
+      expect(task.id).toBe('201')
+      expect(task.title).toBe('Corrigir memory leak no worker')
+      expect(task.description).toBe(
+        'Descricao rica completa recuperada da API REST.',
+      )
+      expect(task.status.id).toBe('2')
+      expect(task.status.name).toBe('Em Andamento')
+      expect(task.priority?.id).toBe('4')
+      expect(task.priority?.name).toBe('Urgente')
+      expect(task.doneRatio).toBe(50)
+      expect(task.spentHours).toBe(4.5)
+    }
+  })
 })

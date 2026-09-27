@@ -139,6 +139,52 @@ export class RedmineClient {
     })
   }
 
+  public async validateAtomKey(
+    atomKey: string,
+  ): Promise<Either<AppError, boolean>> {
+    const validation = this.validateConfig()
+    if (validation.isFailure()) return validation.forwardFailure()
+
+    let sanitizedKey = atomKey.trim()
+    if (sanitizedKey.includes('key=')) {
+      const match = sanitizedKey.match(/key=([a-zA-Z0-9]+)/)
+      if (match) sanitizedKey = match[1]
+    }
+
+    if (sanitizedKey.length < 20 || !/^[a-zA-Z0-9_-]+$/.test(sanitizedKey)) {
+      return Either.failure(
+        AppError.ValidationError('Chave de acesso ao feed Atom inválida.'),
+      )
+    }
+
+    const atomRes = await this.httpClient.get<string>('activity.atom', {
+      params: { key: sanitizedKey, show_issues: '1', limit: '1' },
+      headers: {
+        Accept: 'application/atom+xml, application/xml, text/xml',
+        'X-Redmine-API-Key': '',
+      },
+    })
+
+    if (atomRes.isFailure()) {
+      return Either.failure(
+        AppError.ValidationError('Chave de acesso ao feed Atom inválida.'),
+      )
+    }
+
+    const raw = String(atomRes.success).trim()
+    if (
+      raw.includes('action-login') ||
+      raw.toLowerCase().startsWith('<!doctype html') ||
+      !raw.includes('<feed')
+    ) {
+      return Either.failure(
+        AppError.ValidationError('Chave de acesso ao feed Atom inválida.'),
+      )
+    }
+
+    return Either.success(true)
+  }
+
   public async listTimeEntries(
     params: Record<string, string>,
   ): Promise<Either<AppError, RedmineTimeEntriesResponse>> {

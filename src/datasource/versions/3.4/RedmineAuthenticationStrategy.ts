@@ -33,6 +33,15 @@ export class RedmineAuthenticationStrategy
     const userResult = await this.client.getCurrentUser()
     if (userResult.isFailure()) return userResult.forwardFailure()
 
+    const rawAtomKey = input?.credentials?.atomKey
+      ? input.credentials.atomKey
+      : this.client.getAtomKey()
+
+    if (rawAtomKey && rawAtomKey.trim()) {
+      const atomValidation = await this.client.validateAtomKey(rawAtomKey)
+      if (atomValidation.isFailure()) return atomValidation.forwardFailure()
+    }
+
     const redmineUser = userResult.success.user
 
     const member: MemberDTO = {
