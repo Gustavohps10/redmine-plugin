@@ -1,5 +1,12 @@
 # @timelapse/redmine-plugin
 
+## 0.5.0
+
+### Minor Changes
+
+- a414011: feat: desacopla custom fields com descoberta dinâmica a partir de issues sem dependência de privilégios de admin, adiciona suporte a getMappingFields e atualiza @mr-tick/sdk para ^0.5.0
+- 642b996: refactor: substitui tabelas estáticas de IDs numéricos por resolução semântica dinâmica de metadados (atividades e status) e adiciona medição de latência real de rede no teste de conexão
+
 ## 0.4.1
 
 ### Patch Changes
