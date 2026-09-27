@@ -1,7 +1,6 @@
 import {
   AddonSettingsSchema,
   DataSourceContext,
-  Either,
   IDataSource,
   IDataSourceInstance,
 } from '@mr-tick/sdk'
@@ -36,25 +35,6 @@ export class RedmineDataSource implements IDataSource {
       timeEntriesProvider: providers.timeEntry,
       membersProvider: providers.member,
       metadataProvider: providers.metadata,
-      testConnection: async () => {
-        const startTime = Date.now()
-        const userResult = await client.getCurrentUser()
-        const latencyMs = Date.now() - startTime
-        if (userResult.isFailure()) {
-          return Either.success({
-            ok: false,
-            message: userResult.failure.messageKey,
-            latencyMs,
-          })
-        }
-
-        const user = userResult.success.user
-        return Either.success({
-          ok: true,
-          message: `Conectado com sucesso como ${user.firstname} ${user.lastname}`,
-          latencyMs,
-        })
-      },
     }
   }
 }

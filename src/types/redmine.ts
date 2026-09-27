@@ -6,7 +6,8 @@ export interface RedmineIdName {
 export interface RedmineCustomField {
   id: number
   name: string
-  value: string
+  value?: string | string[] | null
+  multiple?: boolean
 }
 
 export interface RedmineUserAPI {
@@ -50,6 +51,7 @@ export interface RedmineIssueAPI {
   spent_hours?: number
   created_on: string
   updated_on: string
+  custom_fields?: RedmineCustomField[]
 }
 
 export interface RedmineIssuesResponse {
@@ -74,6 +76,7 @@ export interface RedmineTimeEntryAPI {
   spent_on: string
   created_on: string
   updated_on: string
+  custom_fields?: RedmineCustomField[]
 }
 
 export interface RedmineTimeEntriesResponse {

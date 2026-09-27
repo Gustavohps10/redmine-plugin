@@ -134,6 +134,34 @@ tracker_feature = Tracker.find_by(name: 'Feature') || Tracker.first
 tracker_bug = Tracker.find_by(name: 'Bug') || Tracker.first
 tracker_support = Tracker.find_by(name: 'Support') || Tracker.first
 
+# 7.1 Configurar Campos Customizados Variados (Issues e Time Entries)
+puts "[SEED] 5.1. Configurando campos customizados diversificados..."
+
+cf_demand_type = IssueCustomField.find_or_initialize_by(name: 'Tipo de Demanda')
+cf_demand_type.field_format = 'list'
+cf_demand_type.possible_values = ['Bug Crítico', 'Feature Nova', 'Refatoração', 'Débito Técnico']
+cf_demand_type.is_for_all = true
+cf_demand_type.trackers = Tracker.all
+cf_demand_type.save!
+
+cf_environment = IssueCustomField.find_or_initialize_by(name: 'Ambiente')
+cf_environment.field_format = 'string'
+cf_environment.is_for_all = true
+cf_environment.trackers = Tracker.all
+cf_environment.save!
+
+cf_story_points = IssueCustomField.find_or_initialize_by(name: 'Story Points')
+cf_story_points.field_format = 'int'
+cf_story_points.is_for_all = true
+cf_story_points.trackers = Tracker.all
+cf_story_points.save!
+
+cf_billable = TimeEntryCustomField.find_or_initialize_by(name: 'Faturável')
+cf_billable.field_format = 'list'
+cf_billable.possible_values = ['Sim', 'Não', 'Cortesia']
+cf_billable.is_for_all = true
+cf_billable.save!
+
 # 8. Tarefas Base Fixas (Issue 1 e 2 para testes automatizados)
 puts "[SEED] 6. Configurando tarefas base..."
 
@@ -146,6 +174,11 @@ issue1.priority = priority_normal
 issue1.author = admin_user
 issue1.assigned_to = admin_user
 issue1.description = 'Esta e uma issue criada para os testes de integracao do plugin.'
+issue1.custom_field_values = {
+  cf_demand_type.id.to_s => 'Feature Nova',
+  cf_environment.id.to_s => 'Staging',
+  cf_story_points.id.to_s => '5'
+}
 issue1.save!
 
 technical_textile_spec = <<~TEXTILE
@@ -222,6 +255,11 @@ issue2.author = mariana_pm
 issue2.assigned_to = carlos_dev
 issue2.estimated_hours = 24.0
 issue2.description = technical_textile_spec
+issue2.custom_field_values = {
+  cf_demand_type.id.to_s => 'Bug Crítico',
+  cf_environment.id.to_s => 'Produção',
+  cf_story_points.id.to_s => '8'
+}
 issue2.save!
 
 ActiveRecord::Base.connection.reset_pk_sequence!('issues') rescue nil
@@ -319,6 +357,11 @@ target_total_issues.times do |i|
   issue.description = desc_text
   issue.created_on = created_date
   issue.updated_on = created_date + (rand(1..5) * 86400)
+  issue.custom_field_values = {
+    cf_demand_type.id.to_s => ['Bug Crítico', 'Feature Nova', 'Refatoração', 'Débito Técnico'].sample,
+    cf_environment.id.to_s => ['Desenvolvimento', 'Staging', 'Produção', 'Homologação'].sample,
+    cf_story_points.id.to_s => [1, 2, 3, 5, 8, 13].sample.to_s
+  }
   issue.save!
 
   created_issues << issue
@@ -430,6 +473,9 @@ new_entries_generated = 0
       )
       te.created_on = entry_time
       te.updated_on = entry_time
+      te.custom_field_values = {
+        cf_billable.id.to_s => ['Sim', 'Não', 'Cortesia'].sample
+      }
       te.save!
       new_entries_generated += 1
     end

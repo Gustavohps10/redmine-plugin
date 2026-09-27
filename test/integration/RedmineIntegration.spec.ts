@@ -342,5 +342,59 @@ describe.each(instances)('Redmine Docker Integration Matrix: $name', ({ url: API
     )
     expect(pullResult60.isSuccess()).toBe(true)
   })
+
+  it('deve obter campos de mapeamento unificados e descobrir custom fields dinamicamente no Redmine real com Admin', async () => {
+    const httpClient = new AxiosHttpClient()
+    const client = new RedmineClient(httpClient, {
+      apiUrl: API_URL,
+      apiKey: API_KEY,
+    })
+
+    const metadataProvider = new RedmineMetadataProvider(client)
+    const result = await metadataProvider.getMappingFields()
+
+    expect(result.isSuccess()).toBe(true)
+    if (result.isSuccess()) {
+      const fields = result.success
+      const statusFields = fields.filter((f) => f.category === 'status')
+      const activityFields = fields.filter((f) => f.category === 'activity')
+      const priorityFields = fields.filter((f) => f.category === 'priority')
+      const trackerFields = fields.filter((f) => f.category === 'tracker')
+      const customFields = fields.filter((f) => f.category === 'custom')
+
+      expect(statusFields.length).toBeGreaterThan(0)
+      expect(activityFields.length).toBeGreaterThan(0)
+      expect(priorityFields.length).toBeGreaterThan(0)
+      expect(trackerFields.length).toBeGreaterThan(0)
+
+      // Valida que os custom fields reais do Redmine foram descobertos
+      expect(customFields.length).toBeGreaterThan(0)
+      const fieldNames = customFields.map((cf) => cf.name)
+      expect(fieldNames).toContain('Tipo de Demanda')
+    }
+  })
+
+  it('deve obter campos de mapeamento e descobrir custom fields com sucesso mesmo com usuario NAO-ADMIN (sem acesso a /custom_fields.json)', async () => {
+    const NON_ADMIN_KEY = 'carlosapikeyredmine1234567890abcdef'
+    const httpClient = new AxiosHttpClient()
+    const client = new RedmineClient(httpClient, {
+      apiUrl: API_URL,
+      apiKey: NON_ADMIN_KEY,
+    })
+
+    const metadataProvider = new RedmineMetadataProvider(client)
+    const result = await metadataProvider.getMappingFields()
+
+    expect(result.isSuccess()).toBe(true)
+    if (result.isSuccess()) {
+      const fields = result.success
+      const customFields = fields.filter((f) => f.category === 'custom')
+
+      // O usuário comum (Carlos) descobre perfeitamente os custom fields das tarefas em que atua
+      expect(customFields.length).toBeGreaterThan(0)
+      const fieldNames = customFields.map((cf) => cf.name)
+      expect(fieldNames).toContain('Tipo de Demanda')
+    }
+  })
 })
 

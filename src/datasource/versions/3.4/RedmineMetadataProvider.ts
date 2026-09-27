@@ -2,6 +2,7 @@ import {
   AppError,
   Either,
   IMetadataProvider,
+  MappingFieldDefinition,
   MetadataDTO,
   MetadataItem,
 } from '@mr-tick/sdk'
@@ -202,6 +203,118 @@ export class RedmineMetadataProvider implements IMetadataProvider {
       participantRoles,
       estimationTypes,
     })
+  }
+
+  public async getMappingFields(): Promise<
+    Either<AppError, MappingFieldDefinition[]>
+  > {
+    const [
+      activitiesResult,
+      statusesResult,
+      prioritiesResult,
+      trackersResult,
+      customFields,
+    ] = await Promise.all([
+      this.client.getActivities(),
+      this.client.getIssueStatuses(),
+      this.client.getPriorities(),
+      this.client.getTrackers(),
+      this.discoverCustomFieldsFromIssues(),
+    ])
+
+    const fields: MappingFieldDefinition[] = []
+
+    if (statusesResult.isSuccess()) {
+      for (const status of statusesResult.success.issue_statuses) {
+        const uiConfig = this.getStatusUiConfig(status)
+        fields.push({
+          id: `status_${status.id}`,
+          name: status.name,
+          category: 'status',
+          defaultIcon: uiConfig.icon,
+          defaultColor: uiConfig.colors.badge,
+          description: `Status de Tarefa: ${status.name}`,
+        })
+      }
+    }
+
+    if (activitiesResult.isSuccess()) {
+      for (const activity of activitiesResult.success.time_entry_activities) {
+        fields.push({
+          id: `activity_${activity.id}`,
+          name: activity.name,
+          category: 'activity',
+          defaultIcon: resolveActivityIcon(activity.name),
+          defaultColor: defaultColors.badge,
+          description: `Atividade de Apontamento: ${activity.name}`,
+        })
+      }
+    }
+
+    if (prioritiesResult.isSuccess()) {
+      for (const priority of prioritiesResult.success.issue_priorities) {
+        fields.push({
+          id: `priority_${priority.id}`,
+          name: priority.name,
+          category: 'priority',
+          defaultIcon: 'AlertCircle',
+          defaultColor: defaultColors.badge,
+          description: `Prioridade: ${priority.name}`,
+        })
+      }
+    }
+
+    if (trackersResult.isSuccess()) {
+      for (const tracker of trackersResult.success.trackers) {
+        fields.push({
+          id: `tracker_${tracker.id}`,
+          name: tracker.name,
+          category: 'tracker',
+          defaultIcon: 'Bookmark',
+          defaultColor: defaultColors.badge,
+          description: `Rastreador: ${tracker.name}`,
+        })
+      }
+    }
+
+    fields.push(...customFields)
+
+    return Either.success(fields)
+  }
+
+  private async discoverCustomFieldsFromIssues(): Promise<
+    MappingFieldDefinition[]
+  > {
+    const issuesResult = await this.client.listIssues({
+      status_id: '*',
+      limit: '50',
+    })
+
+    if (issuesResult.isFailure()) return []
+
+    const customFieldsMap = new Map<number, string>()
+    for (const issue of issuesResult.success.issues) {
+      if (!issue.custom_fields) continue
+      for (const cf of issue.custom_fields) {
+        if (!customFieldsMap.has(cf.id)) {
+          customFieldsMap.set(cf.id, cf.name)
+        }
+      }
+    }
+
+    const customFields: MappingFieldDefinition[] = []
+    for (const [id, name] of customFieldsMap.entries()) {
+      customFields.push({
+        id: `custom_field_${id}`,
+        name,
+        category: 'custom',
+        defaultIcon: 'SlidersHorizontal',
+        defaultColor: '#8B5CF6',
+        description: `Campo Customizado do Redmine #${id}`,
+      })
+    }
+
+    return customFields
   }
 
   private getStatusUiConfig(status: RedmineStatusAPI): {
