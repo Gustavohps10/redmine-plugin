@@ -1,5 +1,11 @@
 # @timelapse/redmine-plugin
 
+## 0.4.1
+
+### Patch Changes
+
+- 5c260d2: Torna a validação da chave do feed Atom estritamente obrigatória na autenticação, rejeitando chaves vazias ou inválidas.
+
 ## 0.4.0
 
 ### Minor Changes
