@@ -145,6 +145,12 @@ export class RedmineClient {
     const validation = this.validateConfig()
     if (validation.isFailure()) return validation.forwardFailure()
 
+    if (!atomKey || !atomKey.trim()) {
+      return Either.failure(
+        AppError.ValidationError('Chave de acesso ao feed Atom obrigatória.'),
+      )
+    }
+
     let sanitizedKey = atomKey.trim()
     if (sanitizedKey.includes('key=')) {
       const match = sanitizedKey.match(/key=([a-zA-Z0-9]+)/)

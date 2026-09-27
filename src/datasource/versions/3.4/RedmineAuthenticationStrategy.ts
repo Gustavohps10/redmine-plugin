@@ -37,10 +37,14 @@ export class RedmineAuthenticationStrategy
       ? input.credentials.atomKey
       : this.client.getAtomKey()
 
-    if (rawAtomKey && rawAtomKey.trim()) {
-      const atomValidation = await this.client.validateAtomKey(rawAtomKey)
-      if (atomValidation.isFailure()) return atomValidation.forwardFailure()
+    if (!rawAtomKey || !rawAtomKey.trim()) {
+      return Either.failure(
+        AppError.ValidationError('Chave de acesso ao feed Atom obrigatória.'),
+      )
     }
+
+    const atomValidation = await this.client.validateAtomKey(rawAtomKey)
+    if (atomValidation.isFailure()) return atomValidation.forwardFailure()
 
     const redmineUser = userResult.success.user
 

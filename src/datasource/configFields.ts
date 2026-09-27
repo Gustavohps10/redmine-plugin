@@ -10,12 +10,14 @@ export const credentialFieldGroups: AddonSettingsGroup[] = [
         label: 'Chave de Acesso à API (REST)',
         type: 'password',
         scope: 'credential',
+        required: true,
       },
       {
         id: 'atomKey',
         label: 'Chave de Acesso ao Atom (RSS)',
         type: 'password',
         scope: 'credential',
+        required: true,
       },
     ],
   },
@@ -32,6 +34,7 @@ export const configurationFieldGroups: AddonSettingsGroup[] = [
         type: 'text',
         placeholder: 'https://redmine.suaempresa.com',
         scope: 'configuration',
+        required: true,
       },
       {
         id: 'redmineVersion',

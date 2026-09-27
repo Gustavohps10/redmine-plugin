@@ -93,6 +93,29 @@ describe.each(instances)('Redmine Docker Integration Matrix: $name', ({ url: API
     }
   })
 
+  it('deve rejeitar autenticacao quando a Atom Key for deixada em branco', async () => {
+    const httpClient = new AxiosHttpClient()
+    const client = new RedmineClient(httpClient, {
+      apiUrl: API_URL,
+      apiKey: API_KEY,
+    })
+
+    const authStrategy = new RedmineAuthenticationStrategy(client)
+    const result = await authStrategy.authenticate({
+      credentials: {
+        apiKey: API_KEY,
+        atomKey: '',
+      },
+    })
+
+    expect(result.isFailure()).toBe(true)
+    if (result.isFailure()) {
+      expect(result.failure.messageKey).toBe(
+        'Chave de acesso ao feed Atom obrigatória.',
+      )
+    }
+  })
+
   it('deve consultar informacoes do membro atual via RedmineMemberProvider', async () => {
     const httpClient = new AxiosHttpClient()
     const client = new RedmineClient(httpClient, {

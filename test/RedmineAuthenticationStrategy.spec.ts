@@ -99,6 +99,30 @@ describe('RedmineAuthenticationStrategy', () => {
     }
   })
 
+  it('deve rejeitar com erro quando a atomKey estiver em branco ou ausente', async () => {
+    const httpClient = new MockHttpClient()
+    httpClient.setRoute('GET', '/users/current.json', 200, userFixture)
+
+    const client = new RedmineClient(httpClient, {
+      apiUrl: 'https://redmine.test',
+      apiKey: 'valid-api-key',
+    })
+
+    const strategy = new RedmineAuthenticationStrategy(client)
+
+    const result = await strategy.authenticate({
+      configuration: { apiUrl: 'https://redmine.test' },
+      credentials: { apiKey: 'valid-api-key', atomKey: '   ' },
+    })
+
+    expect(result.isFailure()).toBe(true)
+    if (result.isFailure()) {
+      expect(result.failure.messageKey).toBe(
+        'Chave de acesso ao feed Atom obrigatória.',
+      )
+    }
+  })
+
   it('deve repassar erro 401 Unauthorized quando chave for inválida', async () => {
     const httpClient = new MockHttpClient()
     httpClient.setRoute('GET', '/users/current.json', 401, {}, 'CHAVE_INVALIDA')
