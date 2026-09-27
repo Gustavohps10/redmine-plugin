@@ -1,5 +1,11 @@
 # @timelapse/redmine-plugin
 
+## 0.4.0
+
+### Minor Changes
+
+- a6ae6d9: Adiciona validação ativa da Atom Key na estratégia de autenticação e enriquecimento completo de tarefas via REST API (por lista de IDs) na sincronização incremental.
+
 ## 0.3.0
 
 ### Minor Changes
