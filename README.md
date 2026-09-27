@@ -74,8 +74,15 @@ yarn sync
 
 ## 🐳 Ambiente Docker para Testes
 
-Consulte a documentação completa de configuração do Redmine 3.4 com Docker em:
+Consulte a documentação completa de configuração da matriz multi-versão do Redmine (3.4, 5.1 e 6.0) com Docker em:
 [docs/DOCKER_ENVIRONMENT.md](docs/DOCKER_ENVIRONMENT.md)
+
+---
+
+## 🏛️ Decisões de Arquitetura e Engenharia
+
+Para entender em detalhes a estratégia de sincronização híbrida (Atom Feed + REST API em batch), a validação ativa da Atom Key e o design multi-versão, consulte o documento:
+[ARCHITECTURE_DECISIONS.md](ARCHITECTURE_DECISIONS.md)
 
 ---
 
