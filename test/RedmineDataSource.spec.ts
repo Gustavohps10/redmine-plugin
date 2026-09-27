@@ -1,9 +1,9 @@
 import { DataSourceContext } from '@mr-tick/sdk'
 import { describe, expect, it } from 'vitest'
 
-import { RedmineDataSource } from '../src/RedmineDataSource.js'
+import { RedmineDataSource } from '../src/datasource'
 import userFixture from './fixtures/user.json'
-import { MockHttpClient } from './helpers/MockHttpClient.js'
+import { MockHttpClient } from './helpers/MockHttpClient'
 
 describe('RedmineDataSource', () => {
   it('deve retornar o esquema de conexão com abas de credenciais e configuração', () => {
@@ -66,4 +66,56 @@ describe('RedmineDataSource', () => {
       }
     }
   })
+
+  it('deve instanciar providers corretamente quando versão 3.4 for explicitamente selecionada', () => {
+    const httpClient = new MockHttpClient()
+    const context: DataSourceContext = {
+      httpClient,
+      config: { apiUrl: 'https://redmine.test', redmineVersion: '3.4' },
+      credentials: { apiKey: 'key-123' },
+    }
+
+    const dataSource = new RedmineDataSource()
+    const instance = dataSource.createInstance(context)
+
+    expect(instance.tasksProvider).toBeDefined()
+    expect(instance.timeEntriesProvider).toBeDefined()
+    expect(instance.membersProvider).toBeDefined()
+    expect(instance.metadataProvider).toBeDefined()
+  })
+
+  it('deve instanciar providers corretamente quando versão 5.0 for explicitamente selecionada', () => {
+    const httpClient = new MockHttpClient()
+    const context: DataSourceContext = {
+      httpClient,
+      config: { apiUrl: 'https://redmine.test', redmineVersion: '5.0' },
+      credentials: { apiKey: 'key-123' },
+    }
+
+    const dataSource = new RedmineDataSource()
+    const instance = dataSource.createInstance(context)
+
+    expect(instance.tasksProvider).toBeDefined()
+    expect(instance.timeEntriesProvider).toBeDefined()
+    expect(instance.membersProvider).toBeDefined()
+    expect(instance.metadataProvider).toBeDefined()
+  })
+
+  it('deve instanciar providers corretamente quando versão 6.0 for explicitamente selecionada', () => {
+    const httpClient = new MockHttpClient()
+    const context: DataSourceContext = {
+      httpClient,
+      config: { apiUrl: 'https://redmine.test', redmineVersion: '6.0' },
+      credentials: { apiKey: 'key-123' },
+    }
+
+    const dataSource = new RedmineDataSource()
+    const instance = dataSource.createInstance(context)
+
+    expect(instance.tasksProvider).toBeDefined()
+    expect(instance.timeEntriesProvider).toBeDefined()
+    expect(instance.membersProvider).toBeDefined()
+    expect(instance.metadataProvider).toBeDefined()
+  })
 })
+

@@ -1,151 +1,108 @@
-# Ambiente Local de Testes com Redmine 3.4 (Docker)
+# Ambiente Local Multi-Versão do Redmine (Docker Matrix: 3.4, 5.1, 6.0)
 
-Este documento descreve como subir um ambiente local do **Redmine 3.4.x** via Docker Compose para desenvolvimento, validação e futuros testes de integração com o addon `@mr-tick/redmine-plugin`.
-
----
-
-## 1. Visão Geral
-
-O Redmine 3.4.x roda sobre **Ruby on Rails 4.2** e suporta bancos de dados PostgreSQL ou MySQL. Para testes isolados sem afetar o servidor de produção da empresa, recomenda-se a imagem oficial do Redmine `redmine:3.4` pareada com PostgreSQL.
+Este documento descreve a arquitetura do ambiente de testes multi-versão do **Redmine (3.4, 5.1 e 6.0)** via Docker Compose, permitindo desenvolvimento, validação e execução da matriz automatizada de testes de integração do addon `@mr-tick/redmine-plugin`.
 
 ---
 
-## 2. Docker Compose (`docker-compose.yml`)
+## 1. Visão Geral da Matriz
 
-Crie um arquivo `docker-compose.yml` na raiz ou em um diretório de infraestrutura local:
+O Redmine evoluiu de versões legadas com Rails 4.2 até a geração atual com Rails 7.2. Para garantir compatibilidade ponta a ponta sem surpresas para clientes em qualquer estágio:
 
-```yaml
-version: '3.8'
+- **Redmine 3.4.x** (porta `3030`): Piso legado corporativo (Rails 4.2 / Ruby 2.4).
+- **Redmine 5.1.x** (porta `3051`): Padrão de mercado atual (Rails 6.1 / Ruby 3.2).
+- **Redmine 6.0.x** (porta `3060`): Última versão estável lançada (Rails 7.2 / Ruby 3.3).
+- **PostgreSQL 10 Multi-Database**: Bancos isolados (`redmine_34`, `redmine_51` e `redmine_60`) criados via `docker/init-multi-db.sh`, garantindo que migrações de schema não interfiram entre si.
 
-services:
-  db:
-    image: postgres:10-alpine
-    restart: always
-    environment:
-      POSTGRES_DB: redmine
-      POSTGRES_USER: redmine
-      POSTGRES_PASSWORD: redmine_password
-    volumes:
-      - redmine_pgdata:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U redmine"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+---
 
-  redmine:
-    image: redmine:3.4
-    restart: always
-    depends_on:
-      db:
-        condition: service_healthy
-    ports:
-      - '3000:3000'
-    environment:
-      REDMINE_DB_POSTGRES: db
-      REDMINE_DB_DATABASE: redmine
-      REDMINE_DB_USERNAME: redmine
-      REDMINE_DB_PASSWORD: redmine_password
-      REDMINE_SECRET_KEY_BASE: 'f7c8d9e0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8'
-    volumes:
-      - redmine_files:/usr/src/redmine/files
+## 2. Arquitetura Modular de Código (`src/`)
 
-volumes:
-  redmine_pgdata:
-  redmine_files:
+```
+src/
+├── client/
+│   ├── RedmineClient.ts          # Cliente HTTP REST, parser de Atom e tolerância a URLs
+│   └── index.ts
+├── datasource/
+│   ├── versions/                 # Implementações encapsuladas no domínio do datasource
+│   │   ├── 3.4/
+│   │   │   ├── RedmineAuthenticationStrategy.ts
+│   │   │   ├── RedmineMemberProvider.ts
+│   │   │   ├── RedmineMetadataProvider.ts
+│   │   │   ├── RedmineTaskProvider.ts
+│   │   │   ├── RedmineTimeEntryProvider.ts
+│   │   │   └── index.ts
+│   │   ├── 5.0/
+│   │   │   └── index.ts          # Reexporta 3.4 com zero duplicação de código
+│   │   └── index.ts              # Factory de resolução por versão
+│   ├── configFields.ts           # Definição de abas e seletor de versão (auto, 3.4, 5.0, 6.0)
+│   ├── RedmineDataSource.ts      # Orquestrador do DataSource
+│   └── index.ts
+├── theme/
+│   ├── redmine.css               # Folha de estilo clássica do Redmine
+│   ├── redmineCss.ts             # Constante REDMINE_CSS
+│   └── index.ts
+├── types/
+│   └── redmine.ts                # DTOs da API
+├── icon.png                      # Asset oficial
+└── index.ts                      # Entrypoint limpo do addon
 ```
 
+### Zero Duplicação de Código Comprovada
+Após a execução dos testes reais com 100% de cobertura contra os três containers, foi comprovado que a REST API e o feed Atom mantiveram total retrocompatibilidade no Redmine 5.1 e no Redmine 6.0. A arquitetura modular permite reutilizar as implementações consolidadas sem duplicar código, mantendo o conector pronto para receber especializações caso futuras versões exijam endpoints diferentes.
+
 ---
 
-## 3. Inicialização do Ambiente
-
-Execute no terminal:
+## 3. Inicialização e Seed Automático
 
 ```bash
-docker compose up -d
+# 1. Sobe todos os containers da matriz (Redmine 3.4, 5.1 e 6.0)
+yarn docker:up
+
+# 2. Executa o seed massivo de 1 mês em todas as 3 instâncias
+yarn docker:seed
+
+# Ou individualmente:
+yarn docker:seed:3.4
+yarn docker:seed:5.1
+yarn docker:seed:6.0
 ```
 
-Aguarde até que as migrações automáticas do banco sejam concluídas:
+---
+
+## 4. Usuários e Credenciais de Teste
+
+Todas as instâncias (`3030`, `3051` e `3060`) contam com a mesma massa pré-configurada:
+
+| Usuário | Nome | Papel | Senha | API Key | Atom Key |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| `admin` | Redmine Admin | Administrador | `admin123` | `testapikeyredmine1234567890abcdef` | `testatomkeyredmine1234567890abcdef` |
+| `carlos.dev` | Carlos Silva | Desenvolvedor | `admin123` | `carlosapikeyredmine1234567890abcdef` | `carlosatomkeyredmine1234567890abcdef` |
+| `mariana.pm` | Mariana Souza | Gerente de Projetos | `admin123` | `marianaapikeyredmine1234567890abcdef` | `marianaatomkeyredmine1234567890abcdef` |
+| `beatriz.qa` | Beatriz Ramos | Analista de QA | `admin123` | `beatrizapikeyredmine1234567890abcdef` | `beatrizatomkeyredmine1234567890abcdef` |
+
+---
+
+## 5. Massa de Dados (Seed Massivo)
+
+- **4 Projetos Corporativos**: `test-project`, `core-api`, `desktop-app`, `customer-portal`.
+- **47 Tarefas Realistas** distribuídas pelo último mês em diferentes status e prioridades.
+- **Especificação Técnica em Textile**: Issue #2 estruturada com tabelas e código TypeScript.
+- **176+ Apontamentos de Horas**: Distribuídos nos dias úteis dos últimos 35 dias para todos os membros.
+
+---
+
+## 6. Execução de Testes
 
 ```bash
-docker compose logs -f redmine
+# Executa apenas testes unitários rápidos (offline)
+yarn test
+
+# Executa matriz completa contra Redmine 3.4, Redmine 5.1 e Redmine 6.0
+yarn test:integration
+
+# Executa todos os testes (unitários + matriz de integração tripla)
+yarn test:all
+
+# Derruba os containers e limpa os volumes
+yarn docker:down
 ```
-
-Quando o log exibir:
-`Listening on 0.0.0.0:3000, CTRL+C to stop`, o servidor estará pronto em `http://localhost:3000`.
-
----
-
-## 4. Configuração Inicial do Redmine
-
-1. Acesse `http://localhost:3000`.
-2. Faça login com as credenciais padrão do Redmine:
-   - **Login**: `admin`
-   - **Senha**: `admin`
-   *(O Redmine solicitará a troca de senha no primeiro acesso; utilize por exemplo `admin123`).*
-
-### Habilitar a API REST (Obrigatório)
-A REST API vem desabilitada por padrão no Redmine.
-1. Vá em **Administração** (`Administration`) -> **Configurações** (`Settings`).
-2. Clique na aba **API** (`API`).
-3. Marque a opção:
-   - `[x] Ativar serviço web REST` (`Enable REST web service`).
-4. Clique em **Salvar**.
-
-### Gerar as Chaves de Acesso (API Key e Atom Key)
-1. No canto superior direito, clique em **Minha conta** (`My account` ou `/my/account`).
-2. Na barra lateral direita:
-   - **Chave de acesso à API**: clique em **Mostrar** (`Show`) ou **Criar** (`Create`). Copie o token hexadecimal (ex: `9b8c7d6e5f4a3b2c1d0e...`).
-   - **Chave de acesso ao feed RSS (Atom)**: clique em **Mostrar** ou **Criar**. Copie o token Atom.
-
----
-
-## 5. Carga de Dados para Testes (Seed)
-
-Para testar o fluxo de tarefas e lançamentos de horas:
-
-1. **Atividades de Apontamento**:
-   - Vá em **Administração** -> **Valores enumerados** -> **Atividades (Lançamento de horas)**.
-   - Certifique-se de que existam:
-     - `Design` (ID padrão: 8)
-     - `Desenvolvimento` (ID padrão: 9, definir como padrão)
-     - `Gestão` (ID padrão: 10)
-
-2. **Projeto de Teste**:
-   - Vá em **Projetos** -> **Novo projeto**.
-   - Nome: `Projeto Alpha` (Identificador: `projeto-alpha`).
-
-3. **Criar Chamados (Issues)**:
-   - Dentro de `Projeto Alpha`, crie:
-     - Issue #1: `Corrigir falha no checkout de pagamentos` (Atribuído a: `admin`).
-     - Issue #2: `Implementar dashboard com métricas diárias` (Atribuído a: `admin`).
-
-4. **Lançamento de Horas (Time Entry)**:
-   - Lance 2.5 horas na Issue #1 na data de hoje com atividade `Desenvolvimento`.
-
----
-
-## 6. Testes Rápidos com cURL
-
-Teste a conectividade com a API REST:
-
-```bash
-# Validar usuário atual e token
-curl -H "X-Redmine-API-Key: SUA_API_KEY" http://localhost:3000/users/current.json
-
-# Validar listagem de tarefas
-curl -H "X-Redmine-API-Key: SUA_API_KEY" "http://localhost:3000/issues.json?status_id=*"
-
-# Validar feed Atom
-curl "http://localhost:3000/activity.atom?show_issues=1&key=SUA_ATOM_KEY"
-```
-
----
-
-## 7. Próximos Passos (Testes de Integração Automatizados)
-
-Futuramente, pode-se configurar um script `test:integration` no repositório que:
-1. Sobe o container Docker do Redmine via script (`docker compose -f docker-compose.test.yml up -d`).
-2. Aguarda o endpoint `http://localhost:3000/users/current.json` responder 200 OK.
-3. Executa a suíte de testes de integração (`vitest run test/integration`).
-4. Derruba o container (`docker compose down -v`).

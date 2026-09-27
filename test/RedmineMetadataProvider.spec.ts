@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'vitest'
 
-import { RedmineClient } from '../src/RedmineClient.js'
-import { RedmineMetadataProvider } from '../src/RedmineMetadataProvider.js'
+import { RedmineClient } from '../src/client/RedmineClient'
+import { RedmineMetadataProvider } from '../src/datasource'
 import prioritiesFixture from './fixtures/issue_priorities.json'
 import statusesFixture from './fixtures/issue_statuses.json'
 import activitiesFixture from './fixtures/time_entry_activities.json'
 import trackersFixture from './fixtures/trackers.json'
-import { MockHttpClient } from './helpers/MockHttpClient.js'
+import { MockHttpClient } from './helpers/MockHttpClient'
 
 describe('RedmineMetadataProvider', () => {
   it('deve obter e mapear metadados completos do Redmine', async () => {

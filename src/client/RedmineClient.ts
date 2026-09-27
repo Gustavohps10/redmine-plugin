@@ -12,18 +12,20 @@ import {
   RedmineTrackersResponse,
   RedmineUpdateTimeEntryPayload,
   RedmineUserResponse,
-} from './types/redmine.js'
+} from '../types/redmine'
 
 export interface RedmineClientConfig {
   apiUrl: string
   apiKey: string
   atomKey?: string
+  version?: string
 }
 
 export class RedmineClient {
   private readonly apiUrl: string
   private readonly apiKey: string
   private readonly atomKey: string
+  private readonly version: string
 
   constructor(
     private readonly httpClient: IHttpClient,
@@ -31,7 +33,14 @@ export class RedmineClient {
   ) {
     this.apiUrl = config.apiUrl ? config.apiUrl.replace(/\/+$/, '') : ''
     this.apiKey = config.apiKey ? config.apiKey.trim() : ''
-    this.atomKey = config.atomKey ? config.atomKey.trim() : ''
+
+    let parsedAtomKey = config.atomKey ? config.atomKey.trim() : ''
+    if (parsedAtomKey.includes('key=')) {
+      const match = parsedAtomKey.match(/key=([a-zA-Z0-9]+)/)
+      if (match) parsedAtomKey = match[1]
+    }
+    this.atomKey = parsedAtomKey
+    this.version = config.version ? config.version.trim() : 'auto'
 
     if (this.apiUrl) {
       this.httpClient.configure({
@@ -45,10 +54,17 @@ export class RedmineClient {
     const apiUrlValue = context.config ? context.config.apiUrl : ''
     const apiKeyValue = context.credentials ? context.credentials.apiKey : ''
     const atomKeyValue = context.credentials ? context.credentials.atomKey : ''
+    const versionValue = context.config ? context.config.redmineVersion : ''
     const apiUrl = typeof apiUrlValue === 'string' ? apiUrlValue : ''
     const apiKey = typeof apiKeyValue === 'string' ? apiKeyValue : ''
     const atomKey = typeof atomKeyValue === 'string' ? atomKeyValue : ''
-    return new RedmineClient(context.httpClient, { apiUrl, apiKey, atomKey })
+    const version = typeof versionValue === 'string' ? versionValue : 'auto'
+    return new RedmineClient(context.httpClient, {
+      apiUrl,
+      apiKey,
+      atomKey,
+      version,
+    })
   }
 
   public getApiUrl(): string {
@@ -61,6 +77,10 @@ export class RedmineClient {
 
   public getAtomKey(): string {
     return this.atomKey
+  }
+
+  public getVersion(): string {
+    return this.version
   }
 
   private validateConfig(): Either<AppError, void> {

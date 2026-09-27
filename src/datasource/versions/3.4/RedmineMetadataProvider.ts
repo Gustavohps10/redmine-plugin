@@ -6,14 +6,13 @@ import {
   MetadataItem,
 } from '@mr-tick/sdk'
 
-import { RedmineClient } from './RedmineClient.js'
-
+import { RedmineClient } from '../../../client/RedmineClient'
 import {
   RedmineActivityAPI,
   RedminePriorityAPI,
   RedmineStatusAPI,
   RedmineTrackerAPI,
-} from './types/redmine.js'
+} from '../../../types/redmine'
 
 const activityIconMap: Record<string, string> = {
   '8': 'Palette',

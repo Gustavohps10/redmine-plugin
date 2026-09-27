@@ -9,12 +9,12 @@ import {
   UpdatedTimeEntryResult,
 } from '@mr-tick/sdk'
 
-import { RedmineClient } from './RedmineClient.js'
+import { RedmineClient } from '../../../client/RedmineClient'
 import {
   RedmineCreateTimeEntryPayload,
   RedmineTimeEntryAPI,
   RedmineUpdateTimeEntryPayload,
-} from './types/redmine.js'
+} from '../../../types/redmine'
 
 export class RedmineTimeEntryProvider implements ITimeEntryProvider {
   constructor(private readonly client: RedmineClient) {}
@@ -75,7 +75,7 @@ export class RedmineTimeEntryProvider implements ITimeEntryProvider {
       offset += limitPerPage
     }
 
-    newEntriesFound.sort((a, b) => {
+    newEntriesFound.sort((a: TimeEntryDTO, b: TimeEntryDTO) => {
       const timeDiff = a.updatedAt.getTime() - b.updatedAt.getTime()
       if (timeDiff !== 0) return timeDiff
       return Number(a.id) - Number(b.id)

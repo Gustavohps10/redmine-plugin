@@ -6,13 +6,9 @@ import {
   IDataSourceInstance,
 } from '@mr-tick/sdk'
 
-import { configurationFieldGroups, credentialFieldGroups } from './configFields.js'
-import { RedmineAuthenticationStrategy } from './RedmineAuthenticationStrategy.js'
-import { RedmineClient } from './RedmineClient.js'
-import { RedmineMemberProvider } from './RedmineMemberProvider.js'
-import { RedmineMetadataProvider } from './RedmineMetadataProvider.js'
-import { RedmineTaskProvider } from './RedmineTaskProvider.js'
-import { RedmineTimeEntryProvider } from './RedmineTimeEntryProvider.js'
+import { configurationFieldGroups, credentialFieldGroups } from './configFields'
+import { RedmineClient } from '../client/RedmineClient'
+import { getProvidersForVersion } from './versions/index'
 
 export class RedmineDataSource implements IDataSource {
   getConnectionSchema(): AddonSettingsSchema {
@@ -32,13 +28,14 @@ export class RedmineDataSource implements IDataSource {
 
   createInstance(context: DataSourceContext): IDataSourceInstance {
     const client = RedmineClient.fromContext(context)
+    const providers = getProvidersForVersion(client, client.getVersion())
 
     return {
-      authStrategy: new RedmineAuthenticationStrategy(client),
-      tasksProvider: new RedmineTaskProvider(client),
-      timeEntriesProvider: new RedmineTimeEntryProvider(client),
-      membersProvider: new RedmineMemberProvider(client),
-      metadataProvider: new RedmineMetadataProvider(client),
+      authStrategy: providers.auth,
+      tasksProvider: providers.task,
+      timeEntriesProvider: providers.timeEntry,
+      membersProvider: providers.member,
+      metadataProvider: providers.metadata,
       testConnection: async () => {
         const userResult = await client.getCurrentUser()
         if (userResult.isFailure()) {

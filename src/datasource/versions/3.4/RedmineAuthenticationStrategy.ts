@@ -6,7 +6,7 @@ import {
   MemberDTO,
 } from '@mr-tick/sdk'
 
-import { RedmineClient } from './RedmineClient.js'
+import { RedmineClient } from '../../../client/RedmineClient'
 
 export interface RedmineAuthCredentials {
   apiKey: string

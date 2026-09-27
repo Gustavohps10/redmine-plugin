@@ -9,8 +9,8 @@ import {
   UpdatedTaskResult,
 } from '@mr-tick/sdk'
 
-import { RedmineClient } from './RedmineClient.js'
-import { RedmineIssueAPI } from './types/redmine.js'
+import { RedmineClient } from '../../../client/RedmineClient'
+import { RedmineIssueAPI } from '../../../types/redmine'
 
 interface AtomEntryDTO {
   id: string
@@ -241,7 +241,10 @@ export class RedmineTaskProvider implements ITaskProvider {
     }
 
     const resultTasks = Array.from(tasksMap.values())
-      .sort((a, b) => a.updatedAt.getTime() - b.updatedAt.getTime())
+      .sort(
+        (a: TaskDTO, b: TaskDTO) =>
+          a.updatedAt.getTime() - b.updatedAt.getTime(),
+      )
       .slice(0, batch)
 
     return Either.success(resultTasks)

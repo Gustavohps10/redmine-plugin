@@ -1,7 +1,7 @@
 import { AddonContext, IAddon } from '@mr-tick/sdk'
 
-import { REDMINE_CSS } from './redmineCss.js'
-import { RedmineDataSource } from './RedmineDataSource.js'
+import { REDMINE_CSS } from './theme'
+import { RedmineDataSource } from './datasource'
 
 export default class RedmineAddon implements IAddon {
   private activeContext: AddonContext | null = null

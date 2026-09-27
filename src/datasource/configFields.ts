@@ -33,6 +33,21 @@ export const configurationFieldGroups: AddonSettingsGroup[] = [
         placeholder: 'https://redmine.suaempresa.com',
         scope: 'configuration',
       },
+      {
+        id: 'redmineVersion',
+        label: 'Versão do Redmine',
+        type: 'select',
+        defaultValue: 'auto',
+        description:
+          'Selecione a versão do seu servidor Redmine ou mantenha detecção automática.',
+        scope: 'configuration',
+        options: [
+          { label: 'Automático (Recomendado)', value: 'auto' },
+          { label: 'Redmine 3.4.x', value: '3.4' },
+          { label: 'Redmine 5.x', value: '5.0' },
+          { label: 'Redmine 6.x', value: '6.0' },
+        ],
+      },
     ],
   },
 ]

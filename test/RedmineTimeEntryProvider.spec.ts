@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest'
 
-import { RedmineClient } from '../src/RedmineClient.js'
-import { RedmineTimeEntryProvider } from '../src/RedmineTimeEntryProvider.js'
+import { RedmineClient } from '../src/client/RedmineClient'
+import { RedmineTimeEntryProvider } from '../src/datasource'
 import timeEntriesFixture from './fixtures/time_entries.json'
-import { MockHttpClient } from './helpers/MockHttpClient.js'
+import { MockHttpClient } from './helpers/MockHttpClient'
 
 describe('RedmineTimeEntryProvider', () => {
   it('deve realizar pull de time entries calculando startDate e endDate com precisão UTC', async () => {

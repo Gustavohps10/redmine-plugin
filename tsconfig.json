@@ -3,11 +3,11 @@
   "compilerOptions": {
     "composite": true,
     "outDir": "dist",
-    "rootDir": "src",
+    "rootDir": ".",
     "paths": {
-      "@/*": ["./src/*"], 
+      "@/*": ["./src/*"]
     }
   },
-  "include": ["src"],
-  "exclude": ["dist", "node_modules"],
+  "include": ["src", "test", "test/**/*.json"],
+  "exclude": ["dist", "node_modules"]
 }

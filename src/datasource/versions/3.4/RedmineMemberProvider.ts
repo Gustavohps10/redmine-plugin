@@ -7,8 +7,8 @@ import {
   PaginationOptionsDTO,
 } from '@mr-tick/sdk'
 
-import { RedmineClient } from './RedmineClient.js'
-import { RedmineUserAPI } from './types/redmine.js'
+import { RedmineClient } from '../../../client/RedmineClient'
+import { RedmineUserAPI } from '../../../types/redmine'
 
 export class RedmineMemberProvider implements IMemberProvider {
   constructor(private readonly client: RedmineClient) {}

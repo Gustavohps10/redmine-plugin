@@ -14,7 +14,7 @@ permissions:
 
 jobs:
   test:
-    name: Test & Build
+    name: Typecheck & Unit Tests
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
@@ -41,9 +41,55 @@ jobs:
       - name: Build TypeScript
         run: yarn build
 
+  integration:
+    name: Docker Matrix Integration Tests (3.4, 5.1, 6.0)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'yarn'
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Install Dependencies
+        run: yarn install
+
+      - name: Build TypeScript
+        run: yarn build
+
+      - name: Start Docker Matrix
+        run: docker compose -f docker-compose.test.yml up -d
+
+      - name: Wait for Redmine Instances
+        run: |
+          echo "Waiting for Redmine 3.4 (3030), 5.1 (3051) and 6.0 (3060) to respond..."
+          for port in 3030 3051 3060; do
+            timeout 90 bash -c "until curl -s -o /dev/null http://localhost:$port; do sleep 2; done"
+            echo "Redmine on port $port is ready!"
+          done
+
+      - name: Run Seed Data
+        run: |
+          docker compose -f docker-compose.test.yml exec -T redmine-3.4 rails runner /usr/src/redmine/seed.rb
+          docker compose -f docker-compose.test.yml exec -T redmine-5.1 rails runner /usr/src/redmine/seed.rb
+          docker compose -f docker-compose.test.yml exec -T redmine-6.0 rails runner /usr/src/redmine/seed.rb
+
+      - name: Run Integration Tests
+        run: yarn test:integration
+
+      - name: Stop Docker Matrix
+        if: always()
+        run: docker compose -f docker-compose.test.yml down -v
+
   release:
     name: Release & Version
-    needs: test
+    needs: [test, integration]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:

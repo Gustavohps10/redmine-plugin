@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest'
 
-import { RedmineClient } from '../src/RedmineClient.js'
+import { RedmineClient } from '../src/client/RedmineClient'
 import issuesFixture from './fixtures/issues.json'
 import timeEntriesFixture from './fixtures/time_entries.json'
 import userFixture from './fixtures/user.json'
-import { MockHttpClient } from './helpers/MockHttpClient.js'
+import { MockHttpClient } from './helpers/MockHttpClient'
 
 describe('RedmineClient', () => {
   it('deve falhar com ValidationError se apiUrl não for informada', async () => {
@@ -129,4 +129,32 @@ describe('RedmineClient', () => {
       expect(result.success.time_entry.id).toBe(999)
     }
   })
+
+  it('deve extrair token de atomKey quando o usuário colar a URL completa do feed Atom', () => {
+    const httpClient = new MockHttpClient()
+    const client = new RedmineClient(httpClient, {
+      apiUrl: 'https://redmine.test',
+      apiKey: 'key-123',
+      atomKey: 'https://redmine.test/activity.atom?key=abcde12345fedcba',
+    })
+
+    expect(client.getAtomKey()).toBe('abcde12345fedcba')
+  })
+
+  it('deve armazenar e retornar a versão configurada ou padrão auto', () => {
+    const httpClient = new MockHttpClient()
+    const clientAuto = new RedmineClient(httpClient, {
+      apiUrl: 'https://redmine.test',
+      apiKey: 'key-123',
+    })
+    expect(clientAuto.getVersion()).toBe('auto')
+
+    const client34 = new RedmineClient(httpClient, {
+      apiUrl: 'https://redmine.test',
+      apiKey: 'key-123',
+      version: '3.4',
+    })
+    expect(client34.getVersion()).toBe('3.4')
+  })
 })
+

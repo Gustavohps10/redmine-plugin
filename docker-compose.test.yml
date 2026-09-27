@@ -1,0 +1,77 @@
+services:
+  db:
+    image: postgres:10-alpine
+    restart: always
+    environment:
+      POSTGRES_DB: postgres
+      POSTGRES_USER: redmine
+      POSTGRES_PASSWORD: redmine_password
+    volumes:
+      - ./docker/init-multi-db.sh:/docker-entrypoint-initdb.d/init-multi-db.sh:ro
+      - redmine_matrix_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U redmine"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  redmine-3.4:
+    image: redmine:3.4
+    restart: always
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - '3030:3000'
+    environment:
+      REDMINE_DB_POSTGRES: db
+      REDMINE_DB_DATABASE: redmine_34
+      REDMINE_DB_USERNAME: redmine
+      REDMINE_DB_PASSWORD: redmine_password
+      REDMINE_SECRET_KEY_BASE: 'f7c8d9e0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8'
+    volumes:
+      - ./docker/seed.rb:/usr/src/redmine/seed.rb:ro
+      - redmine_34_files:/usr/src/redmine/files
+
+  redmine-5.1:
+    image: redmine:5.1
+    restart: always
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - '3051:3000'
+    environment:
+      REDMINE_DB_POSTGRES: db
+      REDMINE_DB_DATABASE: redmine_51
+      REDMINE_DB_USERNAME: redmine
+      REDMINE_DB_PASSWORD: redmine_password
+      REDMINE_SECRET_KEY_BASE: 'a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8f7c8d9e0'
+    volumes:
+      - ./docker/seed.rb:/usr/src/redmine/seed.rb:ro
+      - redmine_51_files:/usr/src/redmine/files
+
+  redmine-6.0:
+    image: redmine:6.0
+    restart: always
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - '3060:3000'
+    environment:
+      REDMINE_DB_POSTGRES: db
+      REDMINE_DB_DATABASE: redmine_60
+      REDMINE_DB_USERNAME: redmine
+      REDMINE_DB_PASSWORD: redmine_password
+      REDMINE_SECRET_KEY_BASE: 'c5d6e7f8a9b0c1d2e3f4a5b6c7d8f7c8d9e0a1b2c3d4e5f6a7b8c9d0e1f2a3b4'
+      SECRET_KEY_BASE: 'c5d6e7f8a9b0c1d2e3f4a5b6c7d8f7c8d9e0a1b2c3d4e5f6a7b8c9d0e1f2a3b4'
+    volumes:
+      - ./docker/seed.rb:/usr/src/redmine/seed.rb:ro
+      - redmine_60_files:/usr/src/redmine/files
+
+volumes:
+  redmine_matrix_pgdata:
+  redmine_34_files:
+  redmine_51_files:
+  redmine_60_files:

@@ -12,6 +12,7 @@
     "declarationMap": true,
     "sourceMap": true,
     "strict": true,
+    "noImplicitAny": true,
     "forceConsistentCasingInFileNames": true,
     "skipLibCheck": true,
     "emitDecoratorMetadata": false,

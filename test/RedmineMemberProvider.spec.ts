@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest'
 
-import { RedmineClient } from '../src/RedmineClient.js'
-import { RedmineMemberProvider } from '../src/RedmineMemberProvider.js'
+import { RedmineClient } from '../src/client/RedmineClient'
+import { RedmineMemberProvider } from '../src/datasource'
 import userFixture from './fixtures/user.json'
-import { MockHttpClient } from './helpers/MockHttpClient.js'
+import { MockHttpClient } from './helpers/MockHttpClient'
 
 describe('RedmineMemberProvider', () => {
   it('deve retornar o usuário logado via getCurrentUser', async () => {

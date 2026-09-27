@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest'
 
-import { RedmineClient } from '../src/RedmineClient.js'
-import { RedmineTaskProvider } from '../src/RedmineTaskProvider.js'
+import { RedmineClient } from '../src/client/RedmineClient'
+import { RedmineTaskProvider } from '../src/datasource'
 import issuesFixture from './fixtures/issues.json'
-import { MockHttpClient } from './helpers/MockHttpClient.js'
+import { MockHttpClient } from './helpers/MockHttpClient'
 
 describe('RedmineTaskProvider', () => {
   it('deve realizar pull de tarefas mapeando para TaskDTO', async () => {

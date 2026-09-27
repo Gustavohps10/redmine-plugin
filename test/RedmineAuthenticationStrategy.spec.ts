@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest'
 
-import { RedmineAuthenticationStrategy } from '../src/RedmineAuthenticationStrategy.js'
-import { RedmineClient } from '../src/RedmineClient.js'
+import { RedmineClient } from '../src/client/RedmineClient'
+import { RedmineAuthenticationStrategy } from '../src/datasource'
 import userFixture from './fixtures/user.json'
-import { MockHttpClient } from './helpers/MockHttpClient.js'
+import { MockHttpClient } from './helpers/MockHttpClient'
 
 describe('RedmineAuthenticationStrategy', () => {
   it('deve autenticar com sucesso e mapear MemberDTO com as credenciais', async () => {
