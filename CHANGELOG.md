@@ -1,5 +1,16 @@
 # @timelapse/redmine-plugin
 
+## 0.5.1
+
+### Patch Changes
+
+- 9fb248b: fix(schema): remove campo metadataMappings do getConnectionSchema
+
+  O campo `metadataMappings` (type: 'mapping') foi removido do schema de conexão inicial
+  pois custom fields e metadados do Redmine só podem ser descobertos após autenticação
+  via API REST. O mapeamento agora é configurado pós-conexão diretamente no painel de
+  instâncias da conexão ativa.
+
 ## 0.5.0
 
 ### Minor Changes
