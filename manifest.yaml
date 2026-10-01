@@ -1,6 +1,6 @@
 id: gustavohps10-redmine
 name: Redmine
-version: 0.5.1
+version: 0.5.2
 categories:
   - dataSource
 author: Gustavo Henrique
@@ -18,12 +18,18 @@ screenshots:
     caption: Overview
   - url: https://raw.githubusercontent.com/Gustavohps10/redmine-plugin/main/screenshots/screenshot-1.png
     caption: Screenshot 1
-downloadUrl: https://github.com/Gustavohps10/redmine-plugin/releases/download/v0.5.1/gustavohps10-redmine-0.5.1.tladdon
+downloadUrl: https://github.com/Gustavohps10/redmine-plugin/releases/download/v0.5.2/gustavohps10-redmine-0.5.2.tladdon
 requiredApiVersion: '>=0.5.0'
-releaseDate: '2026-09-28'
+releaseDate: '2026-10-01'
 changelog:
   - Release 0.1.1
 packages:
+  - version: 0.5.2
+    requiredApiVersion: '>=0.5.0'
+    releaseDate: '2026-10-01'
+    downloadUrl: https://github.com/Gustavohps10/redmine-plugin/releases/download/v0.5.2/gustavohps10-redmine-0.5.2.tladdon
+    changelog:
+      - Release 0.1.1
   - version: 0.5.1
     requiredApiVersion: '>=0.5.0'
     releaseDate: '2026-09-28'
