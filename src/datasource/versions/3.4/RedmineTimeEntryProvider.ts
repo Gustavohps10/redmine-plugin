@@ -16,6 +16,13 @@ import {
   RedmineUpdateTimeEntryPayload,
 } from '../../../types/redmine'
 
+function formatLocalDateYMD(date: Date): string {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
 export class RedmineTimeEntryProvider implements ITimeEntryProvider {
   constructor(private readonly client: RedmineClient) {}
 
@@ -40,8 +47,8 @@ export class RedmineTimeEntryProvider implements ITimeEntryProvider {
 
     while (true) {
       const params: Record<string, string> = {
-        from: fromDate.toISOString().split('T')[0],
-        to: toDate.toISOString().split('T')[0],
+        from: formatLocalDateYMD(fromDate),
+        to: formatLocalDateYMD(toDate),
         limit: String(limitPerPage),
         offset: String(offset),
       }
@@ -91,16 +98,17 @@ export class RedmineTimeEntryProvider implements ITimeEntryProvider {
   ): Promise<Either<AppError, PagedResultDTO<TimeEntryDTO>>> {
     const params: Record<string, string> = {
       user_id: memberId,
-      from: startDate.toISOString().split('T')[0],
-      to: endDate.toISOString().split('T')[0],
+      from: formatLocalDateYMD(startDate),
+      to: formatLocalDateYMD(endDate),
       limit: '100',
     }
 
     const result = await this.client.listTimeEntries(params)
     if (result.isFailure()) return result.forwardFailure()
 
-    const items = result.success.time_entries.map(
-      (entry: RedmineTimeEntryAPI) => this.mapTimeEntryToDTO(entry),
+    const entries = result.success.time_entries
+    const items = entries.map((entry: RedmineTimeEntryAPI) =>
+      this.mapTimeEntryToDTO(entry),
     )
 
     return Either.success({
@@ -120,7 +128,8 @@ export class RedmineTimeEntryProvider implements ITimeEntryProvider {
       return result.forwardFailure()
     }
 
-    const dto = this.mapTimeEntryToDTO(result.success.time_entry)
+    const entry = result.success.time_entry
+    const dto = this.mapTimeEntryToDTO(entry)
     return Either.success(dto)
   }
 
@@ -139,8 +148,9 @@ export class RedmineTimeEntryProvider implements ITimeEntryProvider {
     const result = await this.client.listTimeEntries(params)
     if (result.isFailure()) return result.forwardFailure()
 
-    const items = result.success.time_entries.map(
-      (entry: RedmineTimeEntryAPI) => this.mapTimeEntryToDTO(entry),
+    const entries = result.success.time_entries
+    const items = entries.map((entry: RedmineTimeEntryAPI) =>
+      this.mapTimeEntryToDTO(entry),
     )
 
     return Either.success({
@@ -155,15 +165,15 @@ export class RedmineTimeEntryProvider implements ITimeEntryProvider {
     entry: TimeEntryDTO,
   ): Promise<Either<AppError, CreatedTimeEntryResult>> {
     const spentOn = entry.startDate
-      ? entry.startDate.toISOString().split('T')[0]
-      : new Date().toISOString().split('T')[0]
+      ? formatLocalDateYMD(entry.startDate)
+      : formatLocalDateYMD(new Date())
 
     const payload: RedmineCreateTimeEntryPayload = {
       time_entry: {
         issue_id: Number(entry.task.id),
         activity_id: Number(entry.activity.id),
         hours: entry.timeSpent,
-        comments: entry.comments,
+        comments: entry.comments ? entry.comments : undefined,
         spent_on: spentOn,
       },
     }
@@ -198,9 +208,9 @@ export class RedmineTimeEntryProvider implements ITimeEntryProvider {
           ? Number(entry.activity.id)
           : undefined,
         hours: entry.timeSpent,
-        comments: entry.comments,
+        comments: entry.comments ? entry.comments : undefined,
         spent_on: entry.startDate
-          ? entry.startDate.toISOString().split('T')[0]
+          ? formatLocalDateYMD(entry.startDate)
           : undefined,
       },
     }
@@ -222,27 +232,14 @@ export class RedmineTimeEntryProvider implements ITimeEntryProvider {
 
   private mapTimeEntryToDTO(entry: RedmineTimeEntryAPI): TimeEntryDTO {
     const hours = Number(entry.hours) || 0
-    const spentOnUTC = new Date(entry.spent_on + 'T00:00:00Z')
-    const createdOnUTC = new Date(entry.created_on)
 
-    const endDate = new Date(spentOnUTC)
-    endDate.setUTCHours(
-      createdOnUTC.getUTCHours(),
-      createdOnUTC.getUTCMinutes(),
-      createdOnUTC.getUTCSeconds(),
-      0,
-    )
+    const dateParts = entry.spent_on.split('-').map(Number)
+    const year = dateParts[0] ? dateParts[0] : 1970
+    const month = dateParts[1] ? dateParts[1] : 1
+    const day = dateParts[2] ? dateParts[2] : 1
 
-    const startDate = new Date(spentOnUTC)
-    const startMs = endDate.getTime() - hours * 60 * 60 * 1000
-    const startTemp = new Date(startMs)
-
-    startDate.setUTCHours(
-      startTemp.getUTCHours(),
-      startTemp.getUTCMinutes(),
-      startTemp.getUTCSeconds(),
-      0,
-    )
+    const startDate = new Date(year, month - 1, day, 12, 0, 0, 0)
+    const endDate = new Date(startDate.getTime() + hours * 3600 * 1000)
 
     const taskId = entry.issue
       ? String(entry.issue.id)
@@ -250,7 +247,9 @@ export class RedmineTimeEntryProvider implements ITimeEntryProvider {
 
     return {
       id: String(entry.id),
-      task: { id: taskId },
+      task: {
+        id: taskId,
+      },
       activity: {
         id: String(entry.activity.id),
         name: entry.activity.name,
@@ -262,7 +261,7 @@ export class RedmineTimeEntryProvider implements ITimeEntryProvider {
       startDate,
       endDate,
       timeSpent: hours,
-      comments: entry.comments,
+      comments: entry.comments ? entry.comments : undefined,
       createdAt: new Date(entry.created_on),
       updatedAt: new Date(entry.updated_on),
       source: 'addon',

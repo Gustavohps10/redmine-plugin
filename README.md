@@ -81,8 +81,9 @@ Consulte a documentação completa de configuração da matriz multi-versão do 
 
 ## 🏛️ Decisões de Arquitetura e Engenharia
 
-Para entender em detalhes a estratégia de sincronização híbrida (Atom Feed + REST API em batch), a validação ativa da Atom Key e o design multi-versão, consulte o documento:
-[ARCHITECTURE_DECISIONS.md](ARCHITECTURE_DECISIONS.md)
+Para entender em detalhes a estratégia de sincronização híbrida (Atom Feed + REST API em batch), a validação ativa da Atom Key e o design multi-versão, consulte:
+* [ARCHITECTURE_DECISIONS.md](ARCHITECTURE_DECISIONS.md) - Decisões arquiteturais fundamentais.
+* [docs/SYNC_SCENARIOS.md](docs/SYNC_SCENARIOS.md) - Análise exaustiva de cenários que funcionam, casos de borda e limitações conhecidas.
 
 ---
 

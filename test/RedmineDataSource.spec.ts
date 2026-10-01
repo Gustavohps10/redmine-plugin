@@ -17,14 +17,13 @@ describe('RedmineDataSource', () => {
   it('deve criar uma instância funcional com todos os providers', async () => {
     const httpClient = new MockHttpClient()
     httpClient.setRoute('GET', '/users/current.json', 200, userFixture)
+    const validAtomKey = 'testatomkeyredmine1234567890abcdef'
     httpClient.setRoute(
       'GET',
-      'activity.atom',
+      'issues/changes.atom',
       200,
-      '<?xml version="1.0" encoding="UTF-8"?><feed xmlns="http://www.w3.org/2005/Atom"><title>Activity</title></feed>',
+      `<?xml version="1.0" encoding="UTF-8"?><feed xmlns="http://www.w3.org/2005/Atom"><link rel="self" href="https://redmine.test/issues/changes.atom?key=${validAtomKey}"/><title>Activity</title></feed>`,
     )
-
-    const validAtomKey = 'testatomkeyredmine1234567890abcdef'
     const context: DataSourceContext = {
       httpClient,
       config: { apiUrl: 'https://redmine.test' },

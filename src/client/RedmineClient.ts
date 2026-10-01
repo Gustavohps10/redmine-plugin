@@ -163,8 +163,8 @@ export class RedmineClient {
       )
     }
 
-    const atomRes = await this.httpClient.get<string>('activity.atom', {
-      params: { key: sanitizedKey, show_issues: '1', limit: '1' },
+    const atomRes = await this.httpClient.get<string>('issues/changes.atom', {
+      params: { key: sanitizedKey },
       headers: {
         Accept: 'application/atom+xml, application/xml, text/xml',
         'X-Redmine-API-Key': '',
@@ -181,7 +181,9 @@ export class RedmineClient {
     if (
       raw.includes('action-login') ||
       raw.toLowerCase().startsWith('<!doctype html') ||
-      !raw.includes('<feed')
+      raw.includes('/login') ||
+      !raw.includes('<feed') ||
+      !raw.includes(`key=${sanitizedKey}`)
     ) {
       return Either.failure(
         AppError.ValidationError('Chave de acesso ao feed Atom inválida.'),

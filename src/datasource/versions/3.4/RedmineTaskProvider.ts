@@ -97,7 +97,9 @@ class AtomTaskMatcher {
 
     const titleParts = entry.title.split('): ')
     const cleanTitle =
-      titleParts.length > 1 ? titleParts[1].trim() : entry.title
+      titleParts.length > 1
+        ? titleParts[1].replace(/\)+$/, '').trim()
+        : entry.title
 
     const projectName = entry.title.includes(' - ')
       ? entry.title.split(' - ')[0].trim()
@@ -167,6 +169,14 @@ export class RedmineTaskProvider implements ITaskProvider {
     let hasMoreHistory = true
     const visitedDates = new Set<string>()
     const tasksMap = new Map<string, TaskDTO>()
+
+    const restRes = await this.pullViaRest(memberId, checkpoint, batch)
+    if (restRes.isSuccess()) {
+      for (const task of restRes.success) {
+        tasksMap.set(task.id, task)
+      }
+    }
+
     const MAX_REQUESTS = 50
 
     while (hasMoreHistory && visitedDates.size < MAX_REQUESTS) {
@@ -177,6 +187,7 @@ export class RedmineTaskProvider implements ITaskProvider {
       const atomRes = await this.client.getActivityAtom({
         key: atomKey,
         show_issues: '1',
+        show_time_entries: '1',
         limit: '100',
         from: formattedDate,
       })
@@ -221,7 +232,7 @@ export class RedmineTaskProvider implements ITaskProvider {
         }
       }
 
-      if (reachedCheckpoint || entries.length < 100) break
+      if (reachedCheckpoint || entries.length === 0) break
 
       if (oldestDateInBatch) {
         const nextDate = new Date(
@@ -249,27 +260,32 @@ export class RedmineTaskProvider implements ITaskProvider {
 
     if (candidateTasks.length === 0) return Either.success([])
 
-    const candidateIds = candidateTasks.map((task: TaskDTO) => task.id)
-    const enrichedTasksRes = await this.fetchEnrichedTasks(candidateIds)
-    if (enrichedTasksRes.isSuccess() && enrichedTasksRes.success.length > 0) {
-      const enrichedMap = new Map<string, TaskDTO>()
-      for (const task of enrichedTasksRes.success) {
-        enrichedMap.set(task.id, task)
-      }
+    const rawAtomIds = candidateTasks
+      .filter((task: TaskDTO) => task.status.id === '0' || !task.description)
+      .map((task: TaskDTO) => task.id)
 
-      const mergedTasks: TaskDTO[] = []
-      for (const candidate of candidateTasks) {
-        const enriched = enrichedMap.get(candidate.id)
-        if (enriched) mergedTasks.push(enriched)
-        if (!enriched) mergedTasks.push(candidate)
-      }
+    if (rawAtomIds.length > 0) {
+      const enrichedTasksRes = await this.fetchEnrichedTasks(rawAtomIds)
+      if (enrichedTasksRes.isSuccess() && enrichedTasksRes.success.length > 0) {
+        const enrichedMap = new Map<string, TaskDTO>()
+        for (const task of enrichedTasksRes.success) {
+          enrichedMap.set(task.id, task)
+        }
 
-      return Either.success(
-        mergedTasks.sort(
-          (a: TaskDTO, b: TaskDTO) =>
-            a.updatedAt.getTime() - b.updatedAt.getTime(),
-        ),
-      )
+        const mergedTasks: TaskDTO[] = []
+        for (const candidate of candidateTasks) {
+          const enriched = enrichedMap.get(candidate.id)
+          if (enriched) mergedTasks.push(enriched)
+          if (!enriched) mergedTasks.push(candidate)
+        }
+
+        return Either.success(
+          mergedTasks.sort(
+            (a: TaskDTO, b: TaskDTO) =>
+              a.updatedAt.getTime() - b.updatedAt.getTime(),
+          ),
+        )
+      }
     }
 
     return Either.success(candidateTasks)

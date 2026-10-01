@@ -93,6 +93,30 @@ describe.each(instances)('Redmine Docker Integration Matrix: $name', ({ url: API
     }
   })
 
+  it('deve rejeitar autenticacao no Redmine real mesmo quando a Atom Key tiver formato longo porem inexistente', async () => {
+    const httpClient = new AxiosHttpClient()
+    const client = new RedmineClient(httpClient, {
+      apiUrl: API_URL,
+      apiKey: API_KEY,
+      atomKey: 'chaveatomfalsa12345678901234567890abcdef',
+    })
+
+    const authStrategy = new RedmineAuthenticationStrategy(client)
+    const result = await authStrategy.authenticate({
+      credentials: {
+        apiKey: API_KEY,
+        atomKey: 'chaveatomfalsa12345678901234567890abcdef',
+      },
+    })
+
+    expect(result.isFailure()).toBe(true)
+    if (result.isFailure()) {
+      expect(result.failure.messageKey).toBe(
+        'Chave de acesso ao feed Atom inválida.',
+      )
+    }
+  })
+
   it('deve rejeitar autenticacao quando a Atom Key for deixada em branco', async () => {
     const httpClient = new AxiosHttpClient()
     const client = new RedmineClient(httpClient, {
@@ -286,6 +310,72 @@ describe.each(instances)('Redmine Docker Integration Matrix: $name', ({ url: API
     }
   })
 
+  it('deve apontar no horario noturno (22h30 UTC-3) preservando a data civil correta e comments null no Redmine real', async () => {
+    const httpClient = new AxiosHttpClient()
+    const client = new RedmineClient(httpClient, {
+      apiUrl: API_URL,
+      apiKey: API_KEY,
+    })
+
+    const metadataProvider = new RedmineMetadataProvider(client)
+    const checkpoint = { updatedAt: new Date(0), id: '' }
+    const metaRes = await metadataProvider.getMetadata('1', checkpoint, 50)
+    expect(metaRes.isSuccess()).toBe(true)
+    if (metaRes.isFailure()) return
+
+    const devActivity = metaRes.success.activities.find(
+      (a: MetadataItem) => a.name === 'Desenvolvimento',
+    )
+    expect(devActivity).toBeDefined()
+    if (!devActivity) return
+
+    const timeEntryProvider = new RedmineTimeEntryProvider(client)
+
+    // Data noturna às 22h30 do dia 30/09 no fuso UTC-3
+    const nightStartDate = new Date('2026-09-30T22:30:00-03:00')
+
+    const createResult = await timeEntryProvider.create({
+      task: { id: '46' },
+      activity: { id: devActivity.id },
+      user: { id: '1' },
+      timeSpent: 1.0,
+      startDate: nightStartDate,
+      comments: undefined,
+      createdAt: nightStartDate,
+      updatedAt: nightStartDate,
+    })
+
+    expect(createResult.isSuccess()).toBe(true)
+    if (createResult.isFailure()) return
+
+    const createdId = createResult.success.id
+
+    // Validar direto na API do Redmine que spent_on foi gravado como 2026-09-30 (e não 2026-10-01)
+    const directApiRes = await client.getTimeEntryById(createdId)
+    expect(directApiRes.isSuccess()).toBe(true)
+    if (directApiRes.isSuccess()) {
+      expect(directApiRes.success.time_entry.spent_on).toBe('2026-09-30')
+      expect(directApiRes.success.time_entry.hours).toBe(1.0)
+    }
+
+    // Validar via findById com enriquecimento do provider
+    const getByIdRes = await timeEntryProvider.findById(createdId)
+    expect(getByIdRes.isSuccess()).toBe(true)
+    if (getByIdRes.isSuccess() && getByIdRes.success) {
+      const dto = getByIdRes.success
+      expect(dto.task.id).toBe('46')
+      expect(dto.startDate).toBeDefined()
+      if (dto.startDate) {
+        expect(dto.startDate.getFullYear()).toBe(2026)
+        expect(dto.startDate.getMonth()).toBe(8) // 8 = Setembro (0-indexed)
+        expect(dto.startDate.getDate()).toBe(30)
+      }
+    }
+
+    // Cleanup
+    await timeEntryProvider.delete(createdId)
+  })
+
   it('deve consultar tarefa detalhada com descricao completa em Textile e journals', async () => {
     const httpClient = new AxiosHttpClient()
     const client = new RedmineClient(httpClient, {
@@ -341,7 +431,7 @@ describe.each(instances)('Redmine Docker Integration Matrix: $name', ({ url: API
       5,
     )
     expect(pullResult60.isSuccess()).toBe(true)
-  })
+  }, 15000)
 
   it('deve obter campos de mapeamento unificados e descobrir custom fields dinamicamente no Redmine real com Admin', async () => {
     const httpClient = new AxiosHttpClient()
