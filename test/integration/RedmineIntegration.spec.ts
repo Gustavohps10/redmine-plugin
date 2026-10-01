@@ -331,8 +331,8 @@ describe.each(instances)('Redmine Docker Integration Matrix: $name', ({ url: API
 
     const timeEntryProvider = new RedmineTimeEntryProvider(client)
 
-    // Data noturna às 22h30 do dia 30/09 no fuso UTC-3
-    const nightStartDate = new Date('2026-09-30T22:30:00-03:00')
+    // Data noturna às 22h30 do dia 30/09 no fuso local do ambiente
+    const nightStartDate = new Date(2026, 8, 30, 22, 30, 0)
 
     const createResult = await timeEntryProvider.create({
       task: { id: '46' },
