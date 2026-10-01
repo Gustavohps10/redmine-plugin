@@ -1,0 +1,173 @@
+{
+  "issues": [
+    {
+      "id": 101,
+      "project": { "id": 1, "name": "Projeto Alpha" },
+      "tracker": { "id": 1, "name": "Defeito" },
+      "status": { "id": 1, "name": "Nova" },
+      "priority": { "id": 2, "name": "Normal" },
+      "author": { "id": 1, "name": "Redmine Admin" },
+      "assigned_to": { "id": 1, "name": "Redmine Admin" },
+      "subject": "Corrigir falha no checkout de pagamentos",
+      "description": "Ao tentar finalizar a compra com PIX, ocorre timeout.",
+      "start_date": "2026-09-20",
+      "due_date": "2026-09-30",
+      "done_ratio": 30,
+      "estimated_hours": 8.0,
+      "spent_hours": 2.5,
+      "created_on": "2026-09-20T10:00:00Z",
+      "updated_on": "2026-09-25T11:00:00Z",
+      "custom_fields": [
+        { "id": 1, "name": "Ambiente", "value": "Produção" },
+        { "id": 2, "name": "Severidade", "value": "Crítica" }
+      ]
+    },
+    {
+      "id": 102,
+      "project": { "id": 1, "name": "Projeto Alpha" },
+      "tracker": { "id": 2, "name": "Recurso" },
+      "status": { "id": 2, "name": "Em Andamento" },
+      "priority": { "id": 3, "name": "Alta" },
+      "author": { "id": 1, "name": "Redmine Admin" },
+      "assigned_to": { "id": 1, "name": "Redmine Admin" },
+      "subject": "Implementar dashboard com métricas diárias",
+      "description": "Visualização consolidada de produtividade e tickets.",
+      "start_date": "2026-09-22",
+      "due_date": "2026-10-05",
+      "done_ratio": 70,
+      "estimated_hours": 16.0,
+      "spent_hours": 10.0,
+      "created_on": "2026-09-22T08:30:00Z",
+      "updated_on": "2026-09-25T11:30:00Z"
+    },
+    {
+      "id": 201,
+      "project": { "id": 1, "name": "Projeto Alpha" },
+      "tracker": { "id": 4, "name": "Apoio" },
+      "status": { "id": 2, "name": "Em Andamento" },
+      "priority": { "id": 2, "name": "Normal" },
+      "author": { "id": 2, "name": "Maria Silva" },
+      "assigned_to": { "id": 2, "name": "Maria Silva" },
+      "subject": "Apoio técnico na integração de gateway",
+      "description": "Suporte a homologação externa.",
+      "start_date": "2026-09-26",
+      "created_on": "2026-09-26T09:00:00Z",
+      "updated_on": "2026-09-26T14:00:00Z",
+      "custom_fields": [
+        { "id": 3, "name": "Sprint", "value": "2026.39" }
+      ]
+    },
+    {
+      "id": 202,
+      "project": { "id": 2, "name": "Projeto Beta" },
+      "tracker": { "id": 3, "name": "Suporte" },
+      "status": { "id": 3, "name": "Resolvida" },
+      "priority": { "id": 4, "name": "Urgente" },
+      "author": { "id": 3, "name": "Carlos Souza" },
+      "assigned_to": { "id": 3, "name": "Carlos Souza" },
+      "subject": "Revisão e homologação de PR de segurança",
+      "description": "Code review detalhado.",
+      "start_date": "2026-09-27",
+      "created_on": "2026-09-27T10:00:00Z",
+      "updated_on": "2026-09-27T17:00:00Z"
+    },
+    {
+      "id": 203,
+      "project": { "id": 1, "name": "Projeto Alpha" },
+      "tracker": { "id": 5, "name": "Reunião" },
+      "status": { "id": 1, "name": "Nova" },
+      "priority": { "id": 1, "name": "Baixa" },
+      "author": { "id": 1, "name": "Redmine Admin" },
+      "subject": "Alinhamento arquitetural do core monorepo",
+      "created_on": "2026-09-28T14:00:00Z",
+      "updated_on": "2026-09-28T15:00:00Z"
+    },
+    {
+      "id": 204,
+      "project": { "id": 2, "name": "Projeto Beta" },
+      "tracker": { "id": 1, "name": "Defeito" },
+      "status": { "id": 4, "name": "Fechada" },
+      "priority": { "id": 5, "name": "Imediata" },
+      "author": { "id": 2, "name": "Maria Silva" },
+      "assigned_to": { "id": 2, "name": "Maria Silva" },
+      "subject": "Bug crítico com caracteres especiais [RFC#9982] & símbolos <teste>",
+      "description": "Tratamento de encoding e sanitização.",
+      "created_on": "2026-09-29T11:00:00Z",
+      "updated_on": "2026-09-29T16:00:00Z"
+    }
+  ],
+  "time_entries": [
+    {
+      "id": 601,
+      "project": { "id": 1, "name": "Projeto Alpha" },
+      "issue": { "id": 101 },
+      "user": { "id": 1, "name": "Redmine Admin" },
+      "activity": { "id": 9, "name": "Desenvolvimento" },
+      "hours": 2.0,
+      "comments": "Análise do log de timeout",
+      "spent_on": "2026-09-25",
+      "created_on": "2026-09-25T11:00:00Z",
+      "updated_on": "2026-09-25T11:00:00Z"
+    },
+    {
+      "id": 602,
+      "project": { "id": 1, "name": "Projeto Alpha" },
+      "issue": { "id": 201 },
+      "user": { "id": 1, "name": "Redmine Admin" },
+      "activity": { "id": 9, "name": "Desenvolvimento" },
+      "hours": 3.5,
+      "comments": "Apoio a Maria Silva na depuração de gateway",
+      "spent_on": "2026-09-26",
+      "created_on": "2026-09-26T14:30:00Z",
+      "updated_on": "2026-09-26T14:30:00Z"
+    },
+    {
+      "id": 603,
+      "project": { "id": 2, "name": "Projeto Beta" },
+      "issue": { "id": 202 },
+      "user": { "id": 1, "name": "Redmine Admin" },
+      "activity": { "id": 10, "name": "Revisão" },
+      "hours": 1.5,
+      "comments": "Revisão de arquitetura de segurança",
+      "spent_on": "2026-09-27",
+      "created_on": "2026-09-27T17:15:00Z",
+      "updated_on": "2026-09-27T17:15:00Z"
+    },
+    {
+      "id": 604,
+      "project": { "id": 1, "name": "Projeto Alpha" },
+      "issue": { "id": 203 },
+      "user": { "id": 1, "name": "Redmine Admin" },
+      "activity": { "id": 11, "name": "Reunião" },
+      "hours": 1.0,
+      "comments": "Reunião de alinhamento com time de engenharia",
+      "spent_on": "2026-09-28",
+      "created_on": "2026-09-28T15:30:00Z",
+      "updated_on": "2026-09-28T15:30:00Z"
+    },
+    {
+      "id": 605,
+      "project": { "id": 2, "name": "Projeto Beta" },
+      "issue": { "id": 204 },
+      "user": { "id": 1, "name": "Redmine Admin" },
+      "activity": { "id": 9, "name": "Desenvolvimento" },
+      "hours": 4.0,
+      "comments": "Hotfix emergencial aplicado",
+      "spent_on": "2026-09-29",
+      "created_on": "2026-09-29T16:30:00Z",
+      "updated_on": "2026-09-29T16:30:00Z"
+    },
+    {
+      "id": 606,
+      "project": { "id": 1, "name": "Projeto Alpha" },
+      "issue": { "id": 999 },
+      "user": { "id": 1, "name": "Redmine Admin" },
+      "activity": { "id": 9, "name": "Desenvolvimento" },
+      "hours": 2.0,
+      "comments": "Apontamento antigo de mais de 45 dias atrás",
+      "spent_on": "2026-08-10",
+      "created_on": "2026-08-10T10:00:00Z",
+      "updated_on": "2026-08-10T10:00:00Z"
+    }
+  ]
+}

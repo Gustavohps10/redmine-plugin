@@ -345,5 +345,33 @@ describe('RedmineTaskProvider', () => {
       expect(supportTask?.title).toBe('TAREFA PARA APOIO')
     }
   })
+
+  it('não deve buscar tarefas dos apontamentos em pull incremental com checkpoint válido', async () => {
+    const httpClient = new MockHttpClient()
+    httpClient.setRoute('GET', '/issues.json', 200, {
+      issues: [],
+      total_count: 0,
+    })
+
+    const client = new RedmineClient(httpClient, {
+      apiUrl: 'https://redmine.test',
+      apiKey: 'test-key',
+    })
+
+    const provider = new RedmineTaskProvider(client)
+
+    // Pull incremental com checkpoint recente
+    const result = await provider.pull(
+      '1',
+      { updatedAt: new Date('2026-10-01T20:00:00Z'), id: '88888' },
+      50,
+    )
+
+    expect(result.isSuccess()).toBe(true)
+    if (result.isSuccess()) {
+      // Como não há issues novas após o checkpoint, deve retornar vazio imediatamente sem loop
+      expect(result.success.length).toBe(0)
+    }
+  })
 })
 

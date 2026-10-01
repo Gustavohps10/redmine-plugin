@@ -134,6 +134,12 @@ export class RedmineTaskProvider implements ITaskProvider {
     taskIds: string[]
   } | null = null
 
+  private targetUserCache: {
+    memberId: string
+    fullName: string
+    firstName: string
+  } | null = null
+
   constructor(private readonly client: RedmineClient) {}
 
   public async pull(
@@ -146,6 +152,28 @@ export class RedmineTaskProvider implements ITaskProvider {
     }
 
     return this.pullViaRest(memberId, checkpoint, batch)
+  }
+
+  private async resolveTargetUser(
+    memberId: string,
+  ): Promise<{ fullName: string; firstName: string }> {
+    if (this.targetUserCache && this.targetUserCache.memberId === memberId) {
+      return this.targetUserCache
+    }
+
+    const userRes = await this.client.getUserById(memberId)
+    if (userRes.isFailure()) {
+      return { fullName: '', firstName: '' }
+    }
+
+    const u = userRes.success.user
+    const resolved = {
+      memberId,
+      fullName: `${u.firstname} ${u.lastname}`.trim().toLowerCase(),
+      firstName: u.firstname.trim().toLowerCase(),
+    }
+    this.targetUserCache = resolved
+    return resolved
   }
 
   private async fetchLoggedTaskIds(memberId: string): Promise<string[]> {
@@ -189,126 +217,7 @@ export class RedmineTaskProvider implements ITaskProvider {
     return taskIds
   }
 
-  private async pullViaAtom(
-    memberId: string,
-    checkpoint: { updatedAt: Date; id: string },
-    batch: number,
-  ): Promise<Either<AppError, TaskDTO[]>> {
-    const atomKey = this.client.getAtomKey()
-    const apiUrl = this.client.getApiUrl()
-    const checkpointTime = checkpoint.updatedAt
-      ? checkpoint.updatedAt.getTime()
-      : 0
-
-    let targetUser = { fullName: '', firstName: '' }
-    if (memberId) {
-      const userRes = await this.client.getUserById(memberId)
-      if (userRes.isSuccess()) {
-        const u = userRes.success.user
-        targetUser = {
-          fullName: `${u.firstname} ${u.lastname}`.trim().toLowerCase(),
-          firstName: u.firstname.trim().toLowerCase(),
-        }
-      }
-    }
-
-    const tasksMap = new Map<string, TaskDTO>()
-
-    const restRes = await this.pullViaRest(memberId, checkpoint, batch)
-    if (restRes.isSuccess()) {
-      for (const task of restRes.success) {
-        tasksMap.set(task.id, task)
-      }
-    }
-
-    const atomRes = await this.client.getActivityAtom({
-      key: atomKey,
-      show_issues: '1',
-      show_time_entries: '1',
-    })
-
-    if (atomRes.isSuccess()) {
-      const rawXml = String(atomRes.success).trim()
-      if (
-        !rawXml.toLowerCase().startsWith('<!doctype html') &&
-        rawXml.includes('<feed')
-      ) {
-        const entries = NativeAtomParser.parseEntries(rawXml)
-        for (const entry of entries) {
-          const entryTime = new Date(entry.updated).getTime()
-          const task = AtomTaskMatcher.toTaskDTO(entry, apiUrl)
-          if (!task) continue
-
-          if (
-            entryTime < checkpointTime ||
-            (entryTime === checkpointTime && task.id === checkpoint.id)
-          ) {
-            continue
-          }
-
-          if (!AtomTaskMatcher.wasMentioned(entry, targetUser)) continue
-
-          if (!tasksMap.has(task.id)) {
-            tasksMap.set(task.id, task)
-          }
-        }
-      }
-    }
-
-    const loggedTaskIds = await this.fetchLoggedTaskIds(memberId)
-    const missingLoggedIds = loggedTaskIds.filter((id) => !tasksMap.has(id))
-
-    const rawAtomIds = Array.from(tasksMap.values())
-      .filter((task: TaskDTO) => task.status.id === '0' || !task.description)
-      .map((task: TaskDTO) => task.id)
-
-    const idsToEnrich = Array.from(
-      new Set([...rawAtomIds, ...missingLoggedIds]),
-    )
-
-    if (idsToEnrich.length > 0) {
-      const enrichedTasksRes = await this.fetchEnrichedTasks(idsToEnrich)
-      if (enrichedTasksRes.isSuccess() && enrichedTasksRes.success.length > 0) {
-        for (const enriched of enrichedTasksRes.success) {
-          tasksMap.set(enriched.id, enriched)
-        }
-      }
-    }
-
-    const candidateTasks = Array.from(tasksMap.values())
-      .sort(
-        (a: TaskDTO, b: TaskDTO) =>
-          a.updatedAt.getTime() - b.updatedAt.getTime(),
-      )
-
-    return Either.success(candidateTasks)
-  }
-
-  private async fetchEnrichedTasks(
-    issueIds: string[],
-  ): Promise<Either<AppError, TaskDTO[]>> {
-    const tasks: TaskDTO[] = []
-    const BATCH_SIZE = 100
-
-    for (let i = 0; i < issueIds.length; i += BATCH_SIZE) {
-      const chunk = issueIds.slice(i, i + BATCH_SIZE)
-      const issuesRes = await this.client.listIssues({
-        issue_id: chunk.join(','),
-        status_id: '*',
-        limit: String(BATCH_SIZE),
-      })
-
-      if (issuesRes.isFailure()) return issuesRes.forwardFailure()
-
-      for (const issue of issuesRes.success.issues) {
-        tasks.push(this.mapIssueToTaskDTO(issue))
-      }
-    }
-
-    return Either.success(tasks)
-  }
-
-  private async pullViaRest(
+  private async fetchAssignedTasks(
     memberId: string,
     checkpoint: { updatedAt: Date; id: string },
     batch: number,
@@ -350,19 +259,171 @@ export class RedmineTaskProvider implements ITaskProvider {
       if (mappedTasks.length >= batch) break
     }
 
+    return Either.success(mappedTasks)
+  }
+
+  private async pullViaAtom(
+    memberId: string,
+    checkpoint: { updatedAt: Date; id: string },
+    batch: number,
+  ): Promise<Either<AppError, TaskDTO[]>> {
+    const atomKey = this.client.getAtomKey()
+    const apiUrl = this.client.getApiUrl()
+    const checkpointDate = checkpoint.updatedAt
+    const hasValidCheckpoint =
+      checkpointDate &&
+      !isNaN(checkpointDate.getTime()) &&
+      checkpointDate.getTime() > 0
+    const checkpointTime = hasValidCheckpoint ? checkpointDate.getTime() : 0
+    const isInitialPull = !hasValidCheckpoint
+
+    let targetUser = { fullName: '', firstName: '' }
     if (memberId) {
-      const loggedTaskIds = await this.fetchLoggedTaskIds(memberId)
-      const existingIds = new Set(mappedTasks.map((t) => t.id))
-      const missingLoggedIds = loggedTaskIds.filter((id) => !existingIds.has(id))
-      if (missingLoggedIds.length > 0) {
-        const enrichedRes = await this.fetchEnrichedTasks(missingLoggedIds)
-        if (enrichedRes.isSuccess()) {
-          mappedTasks.push(...enrichedRes.success)
+      targetUser = await this.resolveTargetUser(memberId)
+    }
+
+    const tasksMap = new Map<string, TaskDTO>()
+
+    const assignedRes = await this.fetchAssignedTasks(
+      memberId,
+      checkpoint,
+      batch,
+    )
+    if (assignedRes.isSuccess()) {
+      for (const task of assignedRes.success) {
+        tasksMap.set(task.id, task)
+      }
+    }
+
+    const atomRes = await this.client.getActivityAtom({
+      key: atomKey,
+      show_issues: '1',
+      show_time_entries: '1',
+    })
+
+    if (atomRes.isSuccess()) {
+      const rawXml = String(atomRes.success).trim()
+      if (
+        !rawXml.toLowerCase().startsWith('<!doctype html') &&
+        rawXml.includes('<feed')
+      ) {
+        const entries = NativeAtomParser.parseEntries(rawXml)
+        for (const entry of entries) {
+          const entryTime = new Date(entry.updated).getTime()
+          const task = AtomTaskMatcher.toTaskDTO(entry, apiUrl)
+          if (!task) continue
+
+          if (
+            entryTime < checkpointTime ||
+            (entryTime === checkpointTime && task.id === checkpoint.id)
+          ) {
+            continue
+          }
+
+          if (!AtomTaskMatcher.wasMentioned(entry, targetUser)) continue
+
+          if (!tasksMap.has(task.id)) {
+            tasksMap.set(task.id, task)
+          }
         }
       }
     }
 
-    return Either.success(mappedTasks)
+    let idsToEnrich: string[] = []
+    if (isInitialPull && memberId) {
+      const loggedTaskIds = await this.fetchLoggedTaskIds(memberId)
+      const missingLoggedIds = loggedTaskIds.filter((id) => !tasksMap.has(id))
+      idsToEnrich.push(...missingLoggedIds)
+    }
+
+    const rawAtomIds = Array.from(tasksMap.values())
+      .filter((task: TaskDTO) => task.status.id === '0' || !task.description)
+      .map((task: TaskDTO) => task.id)
+
+    idsToEnrich = Array.from(new Set([...idsToEnrich, ...rawAtomIds]))
+
+    if (idsToEnrich.length > 0) {
+      const enrichedTasksRes = await this.fetchEnrichedTasks(idsToEnrich)
+      if (enrichedTasksRes.isSuccess() && enrichedTasksRes.success.length > 0) {
+        for (const enriched of enrichedTasksRes.success) {
+          tasksMap.set(enriched.id, enriched)
+        }
+      }
+    }
+
+    const candidateTasks = Array.from(tasksMap.values()).sort(
+      (a: TaskDTO, b: TaskDTO) => a.updatedAt.getTime() - b.updatedAt.getTime(),
+    )
+
+    return Either.success(candidateTasks)
+  }
+
+  private async fetchEnrichedTasks(
+    issueIds: string[],
+  ): Promise<Either<AppError, TaskDTO[]>> {
+    const tasks: TaskDTO[] = []
+    const BATCH_SIZE = 100
+
+    for (let i = 0; i < issueIds.length; i += BATCH_SIZE) {
+      const chunk = issueIds.slice(i, i + BATCH_SIZE)
+      const issuesRes = await this.client.listIssues({
+        issue_id: chunk.join(','),
+        status_id: '*',
+        limit: String(BATCH_SIZE),
+      })
+
+      if (issuesRes.isFailure()) return issuesRes.forwardFailure()
+
+      for (const issue of issuesRes.success.issues) {
+        tasks.push(this.mapIssueToTaskDTO(issue))
+      }
+    }
+
+    return Either.success(tasks)
+  }
+
+  private async pullViaRest(
+    memberId: string,
+    checkpoint: { updatedAt: Date; id: string },
+    batch: number,
+  ): Promise<Either<AppError, TaskDTO[]>> {
+    const assignedRes = await this.fetchAssignedTasks(
+      memberId,
+      checkpoint,
+      batch,
+    )
+    if (assignedRes.isFailure()) return assignedRes.forwardFailure()
+
+    const tasksMap = new Map<string, TaskDTO>()
+    for (const task of assignedRes.success) {
+      tasksMap.set(task.id, task)
+    }
+
+    const checkpointDate = checkpoint.updatedAt
+    const hasValidCheckpoint =
+      checkpointDate &&
+      !isNaN(checkpointDate.getTime()) &&
+      checkpointDate.getTime() > 0
+    const isInitialPull = !hasValidCheckpoint
+
+    if (isInitialPull && memberId) {
+      const loggedTaskIds = await this.fetchLoggedTaskIds(memberId)
+      const missingLoggedIds = loggedTaskIds.filter((id) => !tasksMap.has(id))
+      if (missingLoggedIds.length > 0) {
+        const enrichedRes = await this.fetchEnrichedTasks(missingLoggedIds)
+        if (enrichedRes.isSuccess()) {
+          for (const enriched of enrichedRes.success) {
+            tasksMap.set(enriched.id, enriched)
+          }
+        }
+      }
+    }
+
+    const candidateTasks = Array.from(tasksMap.values()).sort(
+      (a: TaskDTO, b: TaskDTO) => a.updatedAt.getTime() - b.updatedAt.getTime(),
+    )
+
+    return Either.success(candidateTasks)
   }
 
   public async findAll(
@@ -466,6 +527,7 @@ export class RedmineTaskProvider implements ITaskProvider {
     if (issue.tracker) {
       task.tracker = {
         id: String(issue.tracker.id),
+        name: issue.tracker.name,
       }
     }
 

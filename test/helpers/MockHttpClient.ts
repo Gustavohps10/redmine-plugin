@@ -7,9 +7,26 @@ export interface MockRequestConfig {
 
 export class MockHttpClient implements IHttpClient {
   public configuredConfig: IHttpClientConfig | null = null
+  public requests: Array<{
+    method: string
+    url: string
+    params?: Record<string, string>
+  }> = []
   private responses: Record<string, string> = {}
   private statusCodes: Record<string, number> = {}
   private errorMessages: Record<string, string> = {}
+
+  public getRequestHistory(): Array<{
+    method: string
+    url: string
+    params?: Record<string, string>
+  }> {
+    return this.requests
+  }
+
+  public clearHistory(): void {
+    this.requests = []
+  }
 
   public configure(config: IHttpClientConfig): void {
     this.configuredConfig = config
@@ -86,6 +103,7 @@ export class MockHttpClient implements IHttpClient {
     url: string,
     params?: Record<string, string>,
   ): Either<AppError, T> {
+    this.requests.push({ method, url, params })
     const exactKey = this.buildKey(method, url, params)
     const baseKey = `${method.toUpperCase()}:${url}`
     const key = this.responses[exactKey] !== undefined ? exactKey : baseKey
