@@ -1,5 +1,11 @@
 # @timelapse/redmine-plugin
 
+## 0.5.2
+
+### Patch Changes
+
+- 1310a65: Corrigir validação de chave Atom via verificação de self-link em /issues/changes.atom e unificar sincronização REST com descoberta de tarefas no feed Atom
+
 ## 0.5.1
 
 ### Patch Changes
