@@ -45,7 +45,11 @@ export class RedmineTimeEntryProvider implements ITimeEntryProvider {
       !isNaN(checkpointDate.getTime()) &&
       checkpointDate.getTime() > 0
 
-    while (true) {
+    const MAX_PAGES = 3
+    let pageCount = 0
+
+    while (pageCount < MAX_PAGES) {
+      pageCount++
       const params: Record<string, string> = {
         from: formatLocalDateYMD(fromDate),
         to: formatLocalDateYMD(toDate),
@@ -78,6 +82,13 @@ export class RedmineTimeEntryProvider implements ITimeEntryProvider {
       if (pageFiltered.length > 0) newEntriesFound.push(...pageFiltered)
       if (newEntriesFound.length >= batch) break
       if (entriesFromApi.length < limitPerPage) break
+      if (!hasValidCheckpoint) break
+
+      const allEntriesBeforeCheckpoint = mappedEntries.every(
+        (entry: TimeEntryDTO) =>
+          entry.updatedAt.getTime() < checkpointDate.getTime(),
+      )
+      if (allEntriesBeforeCheckpoint) break
 
       offset += limitPerPage
     }

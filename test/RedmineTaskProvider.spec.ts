@@ -254,4 +254,96 @@ describe('RedmineTaskProvider', () => {
       expect(task.spentHours).toBe(4.5)
     }
   })
+
+  it('deve incluir tarefas onde o usuario apontou horas recentes mesmo que nao atribuidas diretamente', async () => {
+    const httpClient = new MockHttpClient()
+    httpClient.setRoute(
+      'GET',
+      '/issues.json',
+      200,
+      {
+        issues: [
+          {
+            id: 101,
+            subject: 'Tarefa Atribuida Principal',
+            project: { id: 1, name: 'Projeto Alpha' },
+            tracker: { id: 1, name: 'Tarefa' },
+            status: { id: 1, name: 'Nova' },
+            updated_on: '2026-09-25T11:00:00Z',
+          },
+        ],
+        total_count: 1,
+      },
+      undefined,
+      {
+        assigned_to_id: '1',
+        sort: 'updated_on:asc,id:asc',
+        limit: '50',
+        status_id: '*',
+      },
+    )
+
+    httpClient.setRoute('GET', '/time_entries.json', 200, {
+      time_entries: [
+        {
+          id: 501,
+          issue: { id: 88888 },
+          hours: 2,
+          spent_on: '2026-09-28',
+          activity: { id: 9, name: 'Desenvolvimento' },
+          user: { id: 1, name: 'Redmine Admin' },
+        },
+      ],
+      total_count: 1,
+    })
+
+    httpClient.setRoute(
+      'GET',
+      '/issues.json',
+      200,
+      {
+        issues: [
+          {
+            id: 88888,
+            subject: 'TAREFA PARA APOIO',
+            description: 'Apoio em homologacao',
+            project: { id: 1, name: 'Projeto Alpha' },
+            tracker: { id: 1, name: 'Apoio' },
+            status: { id: 1, name: 'Nova' },
+            updated_on: '2026-09-28T10:00:00Z',
+          },
+        ],
+        total_count: 1,
+      },
+      undefined,
+      {
+        issue_id: '88888',
+        limit: '100',
+        status_id: '*',
+      },
+    )
+
+    const client = new RedmineClient(httpClient, {
+      apiUrl: 'https://redmine.test',
+      apiKey: 'test-key',
+    })
+
+    const provider = new RedmineTaskProvider(client)
+
+    const result = await provider.pull(
+      '1',
+      { updatedAt: new Date(0), id: '0' },
+      50,
+    )
+
+    expect(result.isSuccess()).toBe(true)
+    if (result.isSuccess()) {
+      const taskIds = result.success.map((t) => t.id)
+      expect(taskIds).toContain('101')
+      expect(taskIds).toContain('88888')
+      const supportTask = result.success.find((t) => t.id === '88888')
+      expect(supportTask?.title).toBe('TAREFA PARA APOIO')
+    }
+  })
 })
+

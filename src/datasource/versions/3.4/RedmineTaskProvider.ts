@@ -128,6 +128,12 @@ class AtomTaskMatcher {
 }
 
 export class RedmineTaskProvider implements ITaskProvider {
+  private recentLoggedTaskIdsCache: {
+    memberId: string
+    timestamp: number
+    taskIds: string[]
+  } | null = null
+
   constructor(private readonly client: RedmineClient) {}
 
   public async pull(
@@ -140,6 +146,47 @@ export class RedmineTaskProvider implements ITaskProvider {
     }
 
     return this.pullViaRest(memberId, checkpoint, batch)
+  }
+
+  private async fetchLoggedTaskIds(memberId: string): Promise<string[]> {
+    if (!memberId) return []
+
+    const now = Date.now()
+    if (
+      this.recentLoggedTaskIdsCache &&
+      this.recentLoggedTaskIdsCache.memberId === memberId &&
+      now - this.recentLoggedTaskIdsCache.timestamp < 120_000
+    ) {
+      return this.recentLoggedTaskIdsCache.taskIds
+    }
+
+    const thirtyDaysAgo = new Date()
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
+    const fromStr = thirtyDaysAgo.toISOString().split('T')[0]
+
+    const result = await this.client.listTimeEntries({
+      user_id: memberId,
+      from: fromStr,
+      limit: '100',
+    })
+
+    if (result.isFailure()) return []
+
+    const taskIdsSet = new Set<string>()
+    for (const entry of result.success.time_entries) {
+      if (entry.issue?.id) {
+        taskIdsSet.add(String(entry.issue.id))
+      }
+    }
+
+    const taskIds = Array.from(taskIdsSet)
+    this.recentLoggedTaskIdsCache = {
+      memberId,
+      timestamp: now,
+      taskIds,
+    }
+
+    return taskIds
   }
 
   private async pullViaAtom(
@@ -165,9 +212,6 @@ export class RedmineTaskProvider implements ITaskProvider {
       }
     }
 
-    let cursorDate = new Date()
-    let hasMoreHistory = true
-    const visitedDates = new Set<string>()
     const tasksMap = new Map<string, TaskDTO>()
 
     const restRes = await this.pullViaRest(memberId, checkpoint, batch)
@@ -177,77 +221,57 @@ export class RedmineTaskProvider implements ITaskProvider {
       }
     }
 
-    const MAX_REQUESTS = 50
+    const atomRes = await this.client.getActivityAtom({
+      key: atomKey,
+      show_issues: '1',
+      show_time_entries: '1',
+    })
 
-    while (hasMoreHistory && visitedDates.size < MAX_REQUESTS) {
-      const formattedDate = cursorDate.toISOString().split('T')[0]
-      if (visitedDates.has(formattedDate)) break
-      visitedDates.add(formattedDate)
-
-      const atomRes = await this.client.getActivityAtom({
-        key: atomKey,
-        show_issues: '1',
-        show_time_entries: '1',
-        limit: '100',
-        from: formattedDate,
-      })
-
-      if (atomRes.isFailure()) break
-
+    if (atomRes.isSuccess()) {
       const rawXml = String(atomRes.success).trim()
       if (
-        rawXml.toLowerCase().startsWith('<!doctype html') ||
-        !rawXml.includes('<feed')
-      )
-        break
+        !rawXml.toLowerCase().startsWith('<!doctype html') &&
+        rawXml.includes('<feed')
+      ) {
+        const entries = NativeAtomParser.parseEntries(rawXml)
+        for (const entry of entries) {
+          const entryTime = new Date(entry.updated).getTime()
+          const task = AtomTaskMatcher.toTaskDTO(entry, apiUrl)
+          if (!task) continue
 
-      const entries = NativeAtomParser.parseEntries(rawXml)
-      if (entries.length === 0) break
+          if (
+            entryTime < checkpointTime ||
+            (entryTime === checkpointTime && task.id === checkpoint.id)
+          ) {
+            continue
+          }
 
-      let reachedCheckpoint = false
-      let oldestDateInBatch: Date | null = null
+          if (!AtomTaskMatcher.wasMentioned(entry, targetUser)) continue
 
-      for (const entry of entries) {
-        const entryTime = new Date(entry.updated).getTime()
-        const entryDate = new Date(entry.updated)
-        if (!oldestDateInBatch || entryDate < oldestDateInBatch) {
-          oldestDateInBatch = entryDate
-        }
-
-        const task = AtomTaskMatcher.toTaskDTO(entry, apiUrl)
-        if (!task) continue
-
-        if (
-          entryTime < checkpointTime ||
-          (entryTime === checkpointTime && task.id === checkpoint.id)
-        ) {
-          reachedCheckpoint = true
-          continue
-        }
-
-        if (!AtomTaskMatcher.wasMentioned(entry, targetUser)) continue
-
-        if (!tasksMap.has(task.id)) {
-          tasksMap.set(task.id, task)
+          if (!tasksMap.has(task.id)) {
+            tasksMap.set(task.id, task)
+          }
         }
       }
+    }
 
-      if (reachedCheckpoint || entries.length === 0) break
+    const loggedTaskIds = await this.fetchLoggedTaskIds(memberId)
+    const missingLoggedIds = loggedTaskIds.filter((id) => !tasksMap.has(id))
 
-      if (oldestDateInBatch) {
-        const nextDate = new Date(
-          oldestDateInBatch.getTime() - 24 * 60 * 60 * 1000,
-        )
-        const nextFormatted = nextDate.toISOString().split('T')[0]
-        if (nextFormatted === formattedDate) {
-          cursorDate.setDate(cursorDate.getDate() - 1)
+    const rawAtomIds = Array.from(tasksMap.values())
+      .filter((task: TaskDTO) => task.status.id === '0' || !task.description)
+      .map((task: TaskDTO) => task.id)
+
+    const idsToEnrich = Array.from(
+      new Set([...rawAtomIds, ...missingLoggedIds]),
+    )
+
+    if (idsToEnrich.length > 0) {
+      const enrichedTasksRes = await this.fetchEnrichedTasks(idsToEnrich)
+      if (enrichedTasksRes.isSuccess() && enrichedTasksRes.success.length > 0) {
+        for (const enriched of enrichedTasksRes.success) {
+          tasksMap.set(enriched.id, enriched)
         }
-        if (nextFormatted !== formattedDate) {
-          cursorDate = nextDate
-        }
-      }
-      if (!oldestDateInBatch) {
-        cursorDate.setDate(cursorDate.getDate() - 1)
       }
     }
 
@@ -256,37 +280,6 @@ export class RedmineTaskProvider implements ITaskProvider {
         (a: TaskDTO, b: TaskDTO) =>
           a.updatedAt.getTime() - b.updatedAt.getTime(),
       )
-      .slice(0, batch)
-
-    if (candidateTasks.length === 0) return Either.success([])
-
-    const rawAtomIds = candidateTasks
-      .filter((task: TaskDTO) => task.status.id === '0' || !task.description)
-      .map((task: TaskDTO) => task.id)
-
-    if (rawAtomIds.length > 0) {
-      const enrichedTasksRes = await this.fetchEnrichedTasks(rawAtomIds)
-      if (enrichedTasksRes.isSuccess() && enrichedTasksRes.success.length > 0) {
-        const enrichedMap = new Map<string, TaskDTO>()
-        for (const task of enrichedTasksRes.success) {
-          enrichedMap.set(task.id, task)
-        }
-
-        const mergedTasks: TaskDTO[] = []
-        for (const candidate of candidateTasks) {
-          const enriched = enrichedMap.get(candidate.id)
-          if (enriched) mergedTasks.push(enriched)
-          if (!enriched) mergedTasks.push(candidate)
-        }
-
-        return Either.success(
-          mergedTasks.sort(
-            (a: TaskDTO, b: TaskDTO) =>
-              a.updatedAt.getTime() - b.updatedAt.getTime(),
-          ),
-        )
-      }
-    }
 
     return Either.success(candidateTasks)
   }
@@ -355,6 +348,18 @@ export class RedmineTaskProvider implements ITaskProvider {
       }
       mappedTasks.push(task)
       if (mappedTasks.length >= batch) break
+    }
+
+    if (memberId) {
+      const loggedTaskIds = await this.fetchLoggedTaskIds(memberId)
+      const existingIds = new Set(mappedTasks.map((t) => t.id))
+      const missingLoggedIds = loggedTaskIds.filter((id) => !existingIds.has(id))
+      if (missingLoggedIds.length > 0) {
+        const enrichedRes = await this.fetchEnrichedTasks(missingLoggedIds)
+        if (enrichedRes.isSuccess()) {
+          mappedTasks.push(...enrichedRes.success)
+        }
+      }
     }
 
     return Either.success(mappedTasks)
@@ -426,7 +431,7 @@ export class RedmineTaskProvider implements ITaskProvider {
     const task: TaskDTO = {
       id: String(issue.id),
       title: issue.subject,
-      description: issue.description,
+      description: issue.description ? issue.description : undefined,
       url: apiUrl ? `${apiUrl}/issues/${issue.id}` : undefined,
       projectName: issue.project ? issue.project.name : undefined,
       status: {
