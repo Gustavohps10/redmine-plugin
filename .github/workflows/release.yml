@@ -70,7 +70,7 @@ jobs:
         run: |
           echo "Waiting for Redmine 3.4 (3030), 5.1 (3051) and 6.0 (3060) to respond..."
           for port in 3030 3051 3060; do
-            timeout 90 bash -c "until curl -s -o /dev/null http://localhost:$port; do sleep 2; done"
+            timeout 120 bash -c "until curl -s -f -L -o /dev/null http://localhost:$port/login; do sleep 2; done"
             echo "Redmine on port $port is ready!"
           done
 
