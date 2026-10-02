@@ -1,5 +1,15 @@
 # @timelapse/redmine-plugin
 
+## 0.6.0
+
+### Minor Changes
+
+- 5c44356: Adiciona suporte a busca de tarefas por lote de IDs e termo de pesquisa no método findAll, e amplia a janela de histórico para enriquecimento de tarefas com apontamentos recentes.
+
+### Patch Changes
+
+- 3b98479: Otimiza sincronização de tarefas e apontamentos eliminando overhead de requisições no Atom, limitando paginação de time entries e incorporando com cache tarefas onde o usuário apontou horas recentemente (suporte/revisão) para garantir exibição de título e metadados.
+
 ## 0.5.2
 
 ### Patch Changes
