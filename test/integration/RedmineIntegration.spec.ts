@@ -260,16 +260,14 @@ describe.each(instances)('Redmine Docker Integration Matrix: $name', ({ url: API
     const createdId = createResult.success.id
     expect(createdId).toBeDefined()
 
-    // 2. Read / List (Verificar que o apontamento foi salvo)
-    const listResult = await client.listTimeEntries({ issue_id: '1' })
-    expect(listResult.isSuccess()).toBe(true)
-    if (listResult.isSuccess()) {
-      const entry = listResult.success.time_entries.find(
-        (t: RedmineTimeEntryAPI) => String(t.id) === String(createdId),
-      )
+    // 2. Read (Verificar que o apontamento foi salvo)
+    const getResult = await client.getTimeEntryById(createdId)
+    expect(getResult.isSuccess()).toBe(true)
+    if (getResult.isSuccess()) {
+      const entry = getResult.success.time_entry
       expect(entry).toBeDefined()
-      expect(entry?.hours).toBe(1.5)
-      expect(entry?.comments).toBe(
+      expect(entry.hours).toBe(1.5)
+      expect(entry.comments).toBe(
         'Lancamento de horas para teste de integracao',
       )
     }
