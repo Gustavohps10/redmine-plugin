@@ -1,3 +1,4 @@
+import { TaskDTO } from '@mr-tick/sdk'
 import { describe, expect, it } from 'vitest'
 
 import { RedmineClient } from '../src/client/RedmineClient'
@@ -338,10 +339,10 @@ describe('RedmineTaskProvider', () => {
 
     expect(result.isSuccess()).toBe(true)
     if (result.isSuccess()) {
-      const taskIds = result.success.map((t) => t.id)
+      const taskIds = result.success.map((t: TaskDTO) => t.id)
       expect(taskIds).toContain('101')
       expect(taskIds).toContain('88888')
-      const supportTask = result.success.find((t) => t.id === '88888')
+      const supportTask = result.success.find((t: TaskDTO) => t.id === '88888')
       expect(supportTask?.title).toBe('TAREFA PARA APOIO')
     }
   })

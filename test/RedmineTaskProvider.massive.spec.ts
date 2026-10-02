@@ -1,3 +1,4 @@
+import { TaskDTO } from '@mr-tick/sdk'
 import { describe, expect, it } from 'vitest'
 
 import { RedmineClient } from '../src/client/RedmineClient'
@@ -60,7 +61,7 @@ describe('RedmineTaskProvider - Massive & Resilience Suite', () => {
     expect(result.isSuccess()).toBe(true)
     if (result.isSuccess()) {
       const tasks = result.success
-      const taskIds = tasks.map((t) => t.id)
+      const taskIds = tasks.map((t: TaskDTO) => t.id)
 
       // Garante que capturou tanto as tarefas atribuídas quanto as tarefas de apoio/revisão
       expect(taskIds).toContain('101')
@@ -71,7 +72,7 @@ describe('RedmineTaskProvider - Massive & Resilience Suite', () => {
       expect(taskIds).toContain('204')
 
       // Valida detalhes ricos da tarefa de apoio 201 (pertencente a Maria Silva)
-      const task201 = tasks.find((t) => t.id === '201')
+      const task201 = tasks.find((t: TaskDTO) => t.id === '201')
       expect(task201).toBeDefined()
       expect(task201?.title).toBe('Apoio técnico na integração de gateway')
       expect(task201?.tracker?.id).toBe('4')
@@ -80,7 +81,7 @@ describe('RedmineTaskProvider - Massive & Resilience Suite', () => {
       expect(task201?.status.name).toBe('Em Andamento')
 
       // Valida detalhes da tarefa de revisão 202 (pertencente a Carlos Souza)
-      const task202 = tasks.find((t) => t.id === '202')
+      const task202 = tasks.find((t: TaskDTO) => t.id === '202')
       expect(task202).toBeDefined()
       expect(task202?.title).toBe('Revisão e homologação de PR de segurança')
       expect(task202?.tracker?.id).toBe('3')
@@ -88,14 +89,14 @@ describe('RedmineTaskProvider - Massive & Resilience Suite', () => {
       expect(task202?.status.name).toBe('Resolvida')
 
       // Valida tarefa sem responsável definido 203
-      const task203 = tasks.find((t) => t.id === '203')
+      const task203 = tasks.find((t: TaskDTO) => t.id === '203')
       expect(task203).toBeDefined()
       expect(task203?.title).toBe('Alinhamento arquitetural do core monorepo')
       expect(task203?.tracker?.id).toBe('5')
       expect(task203?.tracker?.name).toBe('Reunião')
 
       // Valida tarefa com caracteres especiais e formatação complexa 204
-      const task204 = tasks.find((t) => t.id === '204')
+      const task204 = tasks.find((t: TaskDTO) => t.id === '204')
       expect(task204).toBeDefined()
       expect(task204?.title).toBe(
         'Bug crítico com caracteres especiais [RFC#9982] & símbolos <teste>',
