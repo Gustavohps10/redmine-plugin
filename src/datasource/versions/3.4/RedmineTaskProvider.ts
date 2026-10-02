@@ -188,23 +188,36 @@ export class RedmineTaskProvider implements ITaskProvider {
       return this.recentLoggedTaskIdsCache.taskIds
     }
 
-    const thirtyDaysAgo = new Date()
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
-    const fromStr = thirtyDaysAgo.toISOString().split('T')[0]
-
-    const result = await this.client.listTimeEntries({
-      user_id: memberId,
-      from: fromStr,
-      limit: '100',
-    })
-
-    if (result.isFailure()) return []
+    const ninetyDaysAgo = new Date()
+    ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90)
+    const fromStr = ninetyDaysAgo.toISOString().split('T')[0]
 
     const taskIdsSet = new Set<string>()
-    for (const entry of result.success.time_entries) {
-      if (entry.issue?.id) {
-        taskIdsSet.add(String(entry.issue.id))
+    let offset = 0
+    const limit = 100
+    const MAX_PAGES = 5
+
+    for (let page = 0; page < MAX_PAGES; page++) {
+      const result = await this.client.listTimeEntries({
+        user_id: memberId,
+        from: fromStr,
+        limit: String(limit),
+        offset: String(offset),
+      })
+
+      if (result.isFailure()) break
+
+      const entries = result.success.time_entries
+      if (entries.length === 0) break
+
+      for (const entry of entries) {
+        if (entry.issue?.id) {
+          taskIdsSet.add(String(entry.issue.id))
+        }
       }
+
+      if (entries.length < limit) break
+      offset += limit
     }
 
     const taskIds = Array.from(taskIdsSet)
@@ -437,6 +450,14 @@ export class RedmineTaskProvider implements ITaskProvider {
       status_id: '*',
       limit: String(pageSize),
       offset: String(offset),
+    }
+
+    if (pagination && pagination.ids && pagination.ids.length > 0) {
+      params.issue_id = pagination.ids.join(',')
+    }
+
+    if (pagination && pagination.search && pagination.search.trim()) {
+      params.subject = `~${pagination.search.trim()}`
     }
 
     const issuesResult = await this.client.listIssues(params)
