@@ -3,6 +3,7 @@ name: Redmine
 version: 0.7.0
 categories:
   - dataSource
+  - theme
 author: Gustavo Henrique
 shortDescription: Redmine data source for projects and issues
 description: Integration with Redmine to fetch projects, issues, users, and time entries
@@ -13,6 +14,7 @@ tags:
   - redmine
   - datasource
   - time-entries
+  - theme
 screenshots:
   - url: https://raw.githubusercontent.com/Gustavohps10/redmine-plugin/main/screenshots/overview.jpg
     caption: Overview
