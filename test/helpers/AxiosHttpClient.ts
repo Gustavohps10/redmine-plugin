@@ -134,10 +134,11 @@ export class AxiosHttpClient implements IHttpClient {
     const message = error.message
 
     if (status === 401) return Either.failure(AppError.Unauthorized(message))
-    if (status === 403) return Either.failure(AppError.Forbidden(message))
+    if (status === 403) return Either.failure(AppError.Http(403, message))
     if (status === 404) return Either.failure(AppError.NotFound(message))
     if (status === 422) return Either.failure(AppError.ValidationError(message))
 
+    if (status !== undefined) return Either.failure(AppError.Http(status, message))
     return Either.failure(AppError.Internal(message))
   }
 }

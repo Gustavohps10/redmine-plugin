@@ -1,6 +1,6 @@
 {
   "name": "@mr-tick/redmine-plugin",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "description": "Conector oficial do Redmine para a plataforma Mr. Tick.",
   "author": "Gustavo <gustavoh.santos735@gmail.com>",
   "license": "MIT",
@@ -43,7 +43,7 @@
     "docker:down": "docker compose -f docker-compose.test.yml down -v"
   },
   "dependencies": {
-    "@mr-tick/sdk": "^0.5.0",
+    "@mr-tick/sdk": "^0.6.0",
     "axios": "^1.7.9"
   },
   "devDependencies": {

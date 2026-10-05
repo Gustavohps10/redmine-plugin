@@ -1,3 +1,4 @@
+import { mapMemberCustomFields } from './mapMemberCustomFields'
 import {
   AppError,
   AuthenticationResult,
@@ -58,9 +59,7 @@ export class RedmineAuthenticationStrategy
       lastLoginOn: redmineUser.last_login_on
         ? redmineUser.last_login_on
         : redmineUser.created_on,
-      customFields: redmineUser.custom_fields
-        ? redmineUser.custom_fields
-        : [],
+      customFields: mapMemberCustomFields(redmineUser.custom_fields),
     }
 
     const credentialsRecord: Record<string, string> = {}

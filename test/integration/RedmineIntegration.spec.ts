@@ -390,8 +390,8 @@ describe.each(instances)('Redmine Docker Integration Matrix: $name', ({ url: API
         'Implementar Gateway de Pagamentos e Webhooks Assíncronos',
       )
       expect(issue.project.name).toBe('Core Platform & API')
-      expect(issue.author.name).toBe('Mariana Souza')
-      expect(issue.assigned_to.name).toBe('Carlos Silva')
+      expect(issue.author?.name).toBe('Mariana Souza')
+      expect(issue.assigned_to?.name).toBe('Carlos Silva')
       expect(issue.description).toContain('h1. Especificação Técnica')
       expect(issue.description).toContain('|_. Parâmetro |_. Tipo de Dado |')
       expect(issue.description).toContain('<code class="typescript">')

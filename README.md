@@ -35,6 +35,22 @@
 
 ---
 
+## Idempotência de Apontamentos
+
+Apontamentos enviados pelo Mr. Tick levam um marcador de correlação (`[mc:<UUID>]`) no campo de comentários do Redmine. O plugin usa esse marcador para localizar uma criação cuja resposta se perdeu e remove o marcador dos comentários exibidos no Mr. Tick. O marcador pode ser visto por quem consultar o comentário diretamente no Redmine.
+
+O core coordena as consultas de correlação; o create do addon faz somente o POST. Falhas transitórias de consulta são repetidas pelo mecanismo de sincronização. Se uma consulta bem-sucedida não encontrar a criação tentada, ou encontrar mais de um registro, o Mr. Tick bloqueia novos POSTs automáticos. Antes de autorizar uma nova criação, confira manualmente se o apontamento já existe no Redmine; uma nova criação autorizada ainda pode duplicar o registro se o original existir, mas não puder ser localizado.
+
+---
+
+O create retorna o registro recebido do Redmine; após PUT confirmado, o addon retorna o ID e o core consulta o estado canônico. Se essa leitura falhar, a recuperação repete somente GET, preservando a edição sem repetir PUT. Horas, comentários e timestamps confirmados pelo servidor substituem os valores locais. A busca usa usuário, tarefa e a data original da tentativa, com paginação e janela de um dia para cada lado. O limite de comentários inclui o marcador e é validado antes da requisição.
+
+Para testar o contrato ainda não publicado, compile o SDK no monorepo e execute `yarn link ../metric/src/apps/sdk --relative` neste repositório. Esse vínculo altera package.json e yarn.lock apenas para desenvolvimento; não deve ser publicado no addon. A publicação do addon depende da publicação prévia do changeset do SDK e de consumir essa versão pelo fluxo normal de dependências.
+
+O pull de apontamentos agora usa obrigatoriamente o contrato de páginas do SDK: `items`, `checkpoint`, `hasMore` e `snapshotId`. O cursor do snapshot detecta mudanças de conteúdo mesmo quando `updated_on` não muda; snapshots incompletos continuam rejeitados. Não há caminho de compatibilidade com o formato anterior de arrays. Apontamentos vinculados apenas a um projeto mantêm a tarefa ausente, sem converter o ID do projeto em ID de issue.
+
+Antes de publicar esta minor do addon, publique a minor do SDK prevista no changeset, atualize a dependência e o lockfile para essa versão publicada e execute testes/build com uma instalação limpa. O empacotamento pelo CLI desse SDK define a nova `requiredApiVersion`. A dependência atual `^0.5.0` e o manifesto existente pertencem à release anterior; o build local com SDK vinculado não comprova instalação limpa dessa release futura.
+
 ## 🔑 Configurações do Plugin
 
 Configurado nativamente pela interface do Mr. Tick App:

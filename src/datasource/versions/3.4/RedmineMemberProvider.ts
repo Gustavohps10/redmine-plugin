@@ -1,3 +1,4 @@
+import { mapMemberCustomFields } from './mapMemberCustomFields'
 import {
   AppError,
   Either,
@@ -74,7 +75,7 @@ export class RedmineMemberProvider implements IMemberProvider {
       lastLoginOn: user.last_login_on
         ? user.last_login_on
         : user.created_on,
-      customFields: user.custom_fields ? user.custom_fields : [],
+      customFields: mapMemberCustomFields(user.custom_fields),
     }
   }
 }
