@@ -120,7 +120,8 @@ export class RedmineTimeEntryProvider implements ITimeEntryProvider {
         (expectedTotal !== undefined && page.total_count !== expectedTotal)
       )
         return Either.failure(AppError.Http(503, "REDMINE_TIME_ENTRY_SNAPSHOT_INCONSISTENT"));
-      expectedTotal = page.total_count;
+      const totalCount = page.total_count;
+      expectedTotal = totalCount;
       for (const entry of page.time_entries) {
         if (
           !Number.isInteger(entry.id) ||
@@ -133,8 +134,8 @@ export class RedmineTimeEntryProvider implements ITimeEntryProvider {
         entries.push(this.mapTimeEntryToDTO(entry));
       }
       offset += page.time_entries.length;
-      if (offset === expectedTotal) return Either.success(entries);
-      if (offset > expectedTotal || page.time_entries.length === 0)
+      if (offset === totalCount) return Either.success(entries);
+      if (offset > totalCount || page.time_entries.length === 0)
         return Either.failure(AppError.Http(503, "REDMINE_TIME_ENTRY_SNAPSHOT_INCOMPLETE"));
     }
   }
@@ -177,7 +178,9 @@ export class RedmineTimeEntryProvider implements ITimeEntryProvider {
       to: formatLocalDateYMD(toDate),
     });
     if (result.isFailure()) return result.forwardFailure();
-    const matches = result.success.filter((remoteEntry) => remoteEntry.correlationId === correlationId);
+    const matches = result.success.filter(
+      (remoteEntry: TimeEntryDTO) => remoteEntry.correlationId === correlationId,
+    );
     if (matches.length > 1)
       return Either.failure(AppError.ValidationError("DUPLICATE_TIME_ENTRY_CORRELATION"));
     if (matches.length === 0) return Either.success(null);

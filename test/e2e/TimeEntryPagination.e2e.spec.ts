@@ -97,7 +97,7 @@ describe('E2E do conector: HTTP real e paginação Redmine', () => {
       if (result.isFailure()) return
       const last = result.success.items.at(-1)
       if (!last) break
-      ids.push(...result.success.items.flatMap((entry) => entry.id ? [entry.id] : []))
+      ids.push(...result.success.items.flatMap((entry: TimeEntryDTO) => entry.id ? [entry.id] : []))
       if (!last.id) return
       checkpoint = result.success.checkpoint
     }
