@@ -1,5 +1,11 @@
 # @timelapse/redmine-plugin
 
+## 0.7.1
+
+### Patch Changes
+
+- 10cfa2c: Expor suporte oficial a Temas (theme e tema) nas categorias e tags do manifesto do Redmine Plugin.
+
 ## 0.7.0
 
 ### Minor Changes
