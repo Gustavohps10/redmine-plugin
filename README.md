@@ -49,7 +49,7 @@ Para testar o contrato ainda não publicado, compile o SDK no monorepo e execute
 
 O pull de apontamentos agora usa obrigatoriamente o contrato de páginas do SDK: `items`, `checkpoint`, `hasMore` e `snapshotId`. O cursor do snapshot detecta mudanças de conteúdo mesmo quando `updated_on` não muda; snapshots incompletos continuam rejeitados. Não há caminho de compatibilidade com o formato anterior de arrays. Apontamentos vinculados apenas a um projeto mantêm a tarefa ausente, sem converter o ID do projeto em ID de issue.
 
-Antes de publicar esta minor do addon, publique a minor do SDK prevista no changeset, atualize a dependência e o lockfile para essa versão publicada e execute testes/build com uma instalação limpa. O empacotamento pelo CLI desse SDK define a nova `requiredApiVersion`. A dependência atual `^0.5.0` e o manifesto existente pertencem à release anterior; o build local com SDK vinculado não comprova instalação limpa dessa release futura.
+O addon consome o SDK publicado (`@mr-tick/sdk`) e mantém o lockfile alinhado à versão mínima de API para a qual foi compilado. O CLI do SDK grava essa versão em `requiredApiVersion` ao gerar o pacote `.tladdon`. Um build com SDK vinculado localmente é útil para desenvolvimento, mas não substitui a validação da dependência publicada e do lockfile.
 
 ## 🔑 Configurações do Plugin
 
