@@ -1,5 +1,11 @@
 # @timelapse/redmine-plugin
 
+## 0.7.2
+
+### Patch Changes
+
+- f10f9a1: Atualiza a dependência para o SDK 0.7 publicado e recompila o addon com o contrato atual de API.
+
 ## 0.7.1
 
 ### Patch Changes
