@@ -43,7 +43,7 @@
     "docker:down": "docker compose -f docker-compose.test.yml down -v"
   },
   "dependencies": {
-    "@mr-tick/sdk": "^0.7.0",
+    "@mr-tick/sdk": "^0.8.0",
     "axios": "^1.7.9"
   },
   "devDependencies": {

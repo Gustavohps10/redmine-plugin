@@ -1,7 +1,7 @@
 import { AddonContext, IAddon } from '@mr-tick/sdk'
 
-import { REDMINE_CSS } from './theme'
 import { RedmineDataSource } from './datasource'
+import { REDMINE_CSS } from './theme'
 
 export default class RedmineAddon implements IAddon {
   private activeContext: AddonContext | null = null
@@ -9,9 +9,9 @@ export default class RedmineAddon implements IAddon {
   activate(context: AddonContext): void {
     this.activeContext = context
 
-    context.dataSources.register(new RedmineDataSource())
+    context.contributions.dataSources.register(new RedmineDataSource())
 
-    context.menus.sidebar.register({
+    context.contributions.menus.sidebar.register({
       id: 'redmine-sidebar',
       label: 'Redmine',
       icon: 'Layers',
@@ -31,7 +31,7 @@ export default class RedmineAddon implements IAddon {
       ],
     })
 
-    context.menus.timerbar.register({
+    context.contributions.menus.timerbar.register({
       id: 'redmine-timerbar-popover',
       type: 'popover',
       icon: 'https://raw.githubusercontent.com/Gustavohps10/redmine-plugin/main/src/icon.png',
@@ -51,20 +51,26 @@ export default class RedmineAddon implements IAddon {
       ],
     })
 
-    context.commands.register('redmine:open-current-issue', async () => {
-      return { status: 'success' }
-    })
+    context.contributions.commands.register(
+      'redmine:open-current-issue',
+      async () => {
+        return { status: 'success' }
+      },
+    )
 
-    context.commands.register('redmine:apply-theme', async () => {
-      await context.commands.execute('theme:set', 'redmine-classic-theme')
-      await context.notifications.success(
+    context.contributions.commands.register('redmine:apply-theme', async () => {
+      await context.contributions.commands.execute(
+        'theme:set',
+        'redmine-classic-theme',
+      )
+      await context.host.notifications.success(
         'Tema Clássico Redmine Ativado!',
         'Redmine Plugin',
       )
       return { status: 'success' }
     })
 
-    context.themes.register({
+    context.contributions.themes.register({
       id: 'redmine-classic-theme',
       name: 'Redmine Classic Red',
       description: 'Tema clássico do Redmine (100% de redmine.css).',
@@ -73,8 +79,9 @@ export default class RedmineAddon implements IAddon {
   }
 
   deactivate(): void {
-    if (this.activeContext) {
-      this.activeContext.themes.unregister('redmine-classic-theme')
-    }
+    if (!this.activeContext) return
+
+    this.activeContext.contributions.themes.unregister('redmine-classic-theme')
+    this.activeContext = null
   }
 }

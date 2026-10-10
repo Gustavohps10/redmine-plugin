@@ -9,9 +9,9 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/mistertick"><img src="https://img.shields.io/badge/Mr--Tick%20SDK-%3E%3D0.4.0-blue.svg" alt="Mr-Tick SDK" /></a>
+  <a href="https://github.com/mistertick"><img src="https://img.shields.io/badge/Mr--Tick%20SDK-%3E%3D0.8.0-blue.svg" alt="Mr-Tick SDK" /></a>
   <a href="#"><img src="https://img.shields.io/badge/Category-DataSource-orange.svg" alt="DataSource" /></a>
-  <a href="#"><img src="https://img.shields.io/badge/version-0.2.0-green.svg" alt="Version" /></a>
+  <a href="https://github.com/Gustavohps10/redmine-plugin/releases"><img src="https://img.shields.io/github/v/release/Gustavohps10/redmine-plugin" alt="Version" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License" /></a>
 </p>
 
@@ -50,6 +50,8 @@ Para testar o contrato ainda não publicado, compile o SDK no monorepo e execute
 O pull de apontamentos agora usa obrigatoriamente o contrato de páginas do SDK: `items`, `checkpoint`, `hasMore` e `snapshotId`. O cursor do snapshot detecta mudanças de conteúdo mesmo quando `updated_on` não muda; snapshots incompletos continuam rejeitados. Não há caminho de compatibilidade com o formato anterior de arrays. Apontamentos vinculados apenas a um projeto mantêm a tarefa ausente, sem converter o ID do projeto em ID de issue.
 
 O addon consome o SDK publicado (`@mr-tick/sdk`) e mantém o lockfile alinhado à versão mínima de API para a qual foi compilado. O CLI do SDK grava essa versão em `requiredApiVersion` ao gerar o pacote `.tladdon`. Um build com SDK vinculado localmente é útil para desenvolvimento, mas não substitui a validação da dependência publicada e do lockfile.
+
+O SDK 0.8.0 organiza o contexto em `core`, `contributions` e `host`. O Redmine registra datasource, menus, comandos e tema em `contributions`, e usa as notificações de `host`. Os IDs de comandos e temas permanecem locais ao addon; o host aplica o namespace e limpa as contribuições ao desativá-lo.
 
 ## 🔑 Configurações do Plugin
 
@@ -105,11 +107,11 @@ Para entender em detalhes a estratégia de sincronização híbrida (Atom Feed +
 
 ## 🚀 Publicação Automática (CI/CD)
 
-Ao criar e enviar uma tag de versão, o GitHub Actions realiza o build, publica a release e notifica o worker `https://addons-manifest.mistertick.workers.dev/`:
+As versões são gerenciadas por Changesets. Envie um changeset junto das alterações para `main`; após os checks, o bot abre o PR de versão. Quando esse PR é integrado, a pipeline compila e empacota o addon, atualiza o manifesto, publica a release e notifica o catálogo oficial.
 
 ```bash
-git tag v0.2.0
-git push origin v0.2.0
+yarn changeset
+yarn changeset status
 ```
 
 ---
