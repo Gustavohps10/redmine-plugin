@@ -1,5 +1,11 @@
 # @timelapse/redmine-plugin
 
+## 0.8.1
+
+### Patch Changes
+
+- 0573511: update @mr-tick/sdk to 0.8.1 and bump compatibility
+
 ## 0.8.0
 
 ### Minor Changes
