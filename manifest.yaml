@@ -21,7 +21,7 @@ screenshots:
   - url: https://raw.githubusercontent.com/Gustavohps10/redmine-plugin/main/screenshots/screenshot-1.png
     caption: Screenshot 1
 downloadUrl: https://github.com/Gustavohps10/redmine-plugin/releases/download/v0.8.0/gustavohps10-redmine-0.8.0.tladdon
-requiredApiVersion: '>=0.8.0'
+requiredApiVersion: '>=0.8.1'
 releaseDate: '2026-10-10'
 changelog:
   - Release 0.1.1
