@@ -1,5 +1,11 @@
 # @timelapse/redmine-plugin
 
+## 0.8.2
+
+### Patch Changes
+
+- a097c35: Atualiza compatibilidade para a versão 0.9.0 do SDK (@mr-tick/sdk) e manifest com requiredApiVersion '>=0.9.0'.
+
 ## 0.8.1
 
 ### Patch Changes
