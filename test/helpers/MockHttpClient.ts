@@ -33,6 +33,17 @@ export class MockHttpClient implements IHttpClient {
     this.configuredConfig = config;
   }
 
+  public withConfig(config: IHttpClientConfig): MockHttpClient {
+    const nextMock = new MockHttpClient();
+    nextMock.configuredConfig = config;
+    nextMock.requests = this.requests;
+    nextMock.responses = this.responses;
+    nextMock.statusCodes = this.statusCodes;
+    nextMock.errorMessages = this.errorMessages;
+    this.configuredConfig = config;
+    return nextMock;
+  }
+
   private buildKey(
     method: string,
     url: string,

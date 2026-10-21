@@ -5,6 +5,32 @@ categories:
   - auth
   - dataSource
   - theme
+capabilities:
+  - capabilityId: redmine-datasource
+    kind: dataSource
+    contractVersion: 1.0.0
+    required: true
+    executionPolicy:
+      kind: independent
+    authRequirement:
+      kind: required
+      connectionProfileId: redmine-instance
+      authorizationRole: primary
+    supportedOperations:
+      - read
+      - write
+      - getMappingFields
+    settingsSchemaScope: connection
+  - capabilityId: redmine-classic-theme
+    kind: theme
+    contractVersion: 1.0.0
+    required: false
+    executionPolicy:
+      kind: independent
+    authRequirement:
+      kind: none
+    supportedOperations:
+      - read
 author: Gustavo Henrique
 shortDescription: Redmine data source for projects and issues
 description: Integration with Redmine to fetch projects, issues, users, and time entries

@@ -26,39 +26,73 @@ export class RedmineClient {
   private readonly apiKey: string
   private readonly atomKey: string
   private readonly version: string
+  private readonly httpClient: IHttpClient
 
   constructor(
-    private readonly httpClient: IHttpClient,
+    httpClient: IHttpClient,
     config: RedmineClientConfig,
   ) {
-    this.apiUrl = config.apiUrl ? config.apiUrl.replace(/\/+$/, '') : ''
-    this.apiKey = config.apiKey ? config.apiKey.trim() : ''
+    let apiUrl = ''
+    if (config.apiUrl) {
+      apiUrl = config.apiUrl.replace(/\/+$/, '')
+    }
+    this.apiUrl = apiUrl
 
-    let parsedAtomKey = config.atomKey ? config.atomKey.trim() : ''
-    if (parsedAtomKey.includes('key=')) {
-      const match = parsedAtomKey.match(/key=([a-zA-Z0-9]+)/)
-      if (match) parsedAtomKey = match[1]
+    let apiKey = ''
+    if (config.apiKey) {
+      apiKey = config.apiKey.trim()
+    }
+    this.apiKey = apiKey
+
+    let parsedAtomKey = ''
+    if (config.atomKey) {
+      parsedAtomKey = config.atomKey.trim()
+      if (parsedAtomKey.includes('key=')) {
+        const match = parsedAtomKey.match(/key=([a-zA-Z0-9]+)/)
+        if (match) parsedAtomKey = match[1]
+      }
     }
     this.atomKey = parsedAtomKey
-    this.version = config.version ? config.version.trim() : 'auto'
+
+    let version = 'auto'
+    if (config.version) {
+      version = config.version.trim()
+    }
+    this.version = version
+
+    const headers: Record<string, string> = {}
+    if (this.apiKey) {
+      headers['X-Redmine-API-Key'] = this.apiKey
+    }
 
     if (this.apiUrl) {
-      this.httpClient.configure({
+      this.httpClient = httpClient.withConfig({
         baseURL: this.apiUrl,
-        headers: this.apiKey ? { 'X-Redmine-API-Key': this.apiKey } : {},
+        headers,
       })
+      return
     }
+
+    this.httpClient = httpClient
   }
 
   public static fromContext(context: DataSourceContext): RedmineClient {
-    const apiUrlValue = context.config ? context.config.apiUrl : ''
-    const apiKeyValue = context.credentials ? context.credentials.apiKey : ''
-    const atomKeyValue = context.credentials ? context.credentials.atomKey : ''
-    const versionValue = context.config ? context.config.redmineVersion : ''
-    const apiUrl = typeof apiUrlValue === 'string' ? apiUrlValue : ''
-    const apiKey = typeof apiKeyValue === 'string' ? apiKeyValue : ''
-    const atomKey = typeof atomKeyValue === 'string' ? atomKeyValue : ''
-    const version = typeof versionValue === 'string' ? versionValue : 'auto'
+    let apiUrl = ''
+    if (context.config && typeof context.config.apiUrl === 'string') {
+      apiUrl = context.config.apiUrl
+    }
+    let apiKey = ''
+    if (context.credentials && typeof context.credentials.apiKey === 'string') {
+      apiKey = context.credentials.apiKey
+    }
+    let atomKey = ''
+    if (context.credentials && typeof context.credentials.atomKey === 'string') {
+      atomKey = context.credentials.atomKey
+    }
+    let version = 'auto'
+    if (context.config && typeof context.config.redmineVersion === 'string') {
+      version = context.config.redmineVersion
+    }
     return new RedmineClient(context.httpClient, {
       apiUrl,
       apiKey,
@@ -71,16 +105,24 @@ export class RedmineClient {
     return this.apiUrl
   }
 
-  public getApiKey(): string {
-    return this.apiKey
-  }
-
-  public getAtomKey(): string {
-    return this.atomKey
+  public hasAtomFeed(): boolean {
+    return this.atomKey.length > 0
   }
 
   public getVersion(): string {
     return this.version
+  }
+
+  private isHtmlLoginResponse(raw: string): boolean {
+    const trimmed = raw.trimStart().toLowerCase()
+    const isHtml = trimmed.startsWith('<!doctype html') || trimmed.startsWith('<html')
+    if (isHtml) {
+      return true
+    }
+    if (!trimmed.includes('<feed')) {
+      return true
+    }
+    return false
   }
 
   private validateConfig(): Either<AppError, void> {
@@ -130,28 +172,56 @@ export class RedmineClient {
   }
 
   public async getActivityAtom(
-    params: Record<string, string>,
+    params?: Record<string, string>,
   ): Promise<Either<AppError, string>> {
     const validation = this.validateConfig()
     if (validation.isFailure()) return validation.forwardFailure()
-    return this.httpClient.get<string>('activity.atom', {
-      params,
+
+    const requestParams: Record<string, string> = {}
+    if (params) {
+      for (const [key, value] of Object.entries(params)) {
+        requestParams[key] = value
+      }
+    }
+    if (!requestParams['key'] && this.atomKey) {
+      requestParams['key'] = this.atomKey
+    }
+
+    const atomRes = await this.httpClient.get<string>('activity.atom', {
+      params: requestParams,
     })
+    if (atomRes.isFailure()) return atomRes.forwardFailure()
+
+    const raw = String(atomRes.success).trim()
+    if (this.isHtmlLoginResponse(raw)) {
+      return Either.failure(
+        AppError.Unauthorized(
+          'Acesso não autorizado ao feed Atom do Redmine. Verifique se a chave de API fornecida tem permissões para ler o feed.',
+        ),
+      )
+    }
+
+    return Either.success(raw)
   }
 
   public async validateAtomKey(
-    atomKey: string,
+    atomKey?: string,
   ): Promise<Either<AppError, boolean>> {
     const validation = this.validateConfig()
     if (validation.isFailure()) return validation.forwardFailure()
 
-    if (!atomKey || !atomKey.trim()) {
+    let keyToValidate = this.atomKey
+    if (atomKey && atomKey.trim()) {
+      keyToValidate = atomKey.trim()
+    }
+
+    if (!keyToValidate) {
       return Either.failure(
         AppError.ValidationError('Chave de acesso ao feed Atom obrigatória.'),
       )
     }
 
-    let sanitizedKey = atomKey.trim()
+    let sanitizedKey = keyToValidate
     if (sanitizedKey.includes('key=')) {
       const match = sanitizedKey.match(/key=([a-zA-Z0-9]+)/)
       if (match) sanitizedKey = match[1]
@@ -178,13 +248,7 @@ export class RedmineClient {
     }
 
     const raw = String(atomRes.success).trim()
-    if (
-      raw.includes('action-login') ||
-      raw.toLowerCase().startsWith('<!doctype html') ||
-      raw.includes('/login') ||
-      !raw.includes('<feed') ||
-      !raw.includes(`key=${sanitizedKey}`)
-    ) {
+    if (this.isHtmlLoginResponse(raw) || !raw.includes(`key=${sanitizedKey}`)) {
       return Either.failure(
         AppError.ValidationError('Chave de acesso ao feed Atom inválida.'),
       )

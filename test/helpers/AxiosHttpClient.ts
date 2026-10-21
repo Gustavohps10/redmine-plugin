@@ -6,17 +6,86 @@ export class AxiosHttpClient implements IHttpClient {
   private defaultParams: Record<string, string> = {}
   private defaultHeaders: Record<string, string> = {}
 
-  constructor() {
-    this.axiosInstance = axios.create()
+  constructor(config?: IHttpClientConfig) {
+    if (config && config.params) {
+      this.defaultParams = config.params
+    }
+    if (config && config.headers) {
+      this.defaultHeaders = config.headers
+    }
+
+    let baseURL: string | undefined = undefined
+    if (config && config.baseURL !== undefined) {
+      baseURL = config.baseURL
+    }
+    let timeout = 15000
+    if (config && config.timeout !== undefined) {
+      timeout = config.timeout
+    }
+
+    this.axiosInstance = axios.create({
+      baseURL,
+      timeout,
+      headers: {
+        ...this.defaultHeaders,
+      },
+    })
+  }
+
+  public withConfig(config: IHttpClientConfig): AxiosHttpClient {
+    const nextHeaders: Record<string, string> = { ...this.defaultHeaders }
+    if (config.headers) {
+      for (const key of Object.keys(config.headers)) {
+        const val = config.headers[key]
+        if (val !== undefined) {
+          nextHeaders[key] = val
+        }
+      }
+    }
+
+    const nextParams: Record<string, string> = { ...this.defaultParams }
+    if (config.params) {
+      for (const key of Object.keys(config.params)) {
+        const val = config.params[key]
+        if (val !== undefined) {
+          nextParams[key] = val
+        }
+      }
+    }
+
+    let nextBaseURL = this.axiosInstance.defaults.baseURL
+    if (config.baseURL !== undefined) {
+      nextBaseURL = config.baseURL
+    }
+
+    let nextTimeout = 15000
+    if (typeof this.axiosInstance.defaults.timeout === 'number' && this.axiosInstance.defaults.timeout > 0) {
+      nextTimeout = this.axiosInstance.defaults.timeout
+    }
+    if (config.timeout !== undefined) {
+      nextTimeout = config.timeout
+    }
+
+    return new AxiosHttpClient({
+      baseURL: nextBaseURL,
+      timeout: nextTimeout,
+      headers: nextHeaders,
+      params: nextParams,
+    })
   }
 
   public configure(config: IHttpClientConfig): void {
     if (config.params) this.defaultParams = config.params
     if (config.headers) this.defaultHeaders = config.headers
 
+    let timeout = 15000
+    if (config.timeout !== undefined) {
+      timeout = config.timeout
+    }
+
     this.axiosInstance = axios.create({
       baseURL: config.baseURL,
-      timeout: config.timeout ? config.timeout : 15000,
+      timeout,
       headers: {
         ...this.defaultHeaders,
       },
@@ -24,12 +93,19 @@ export class AxiosHttpClient implements IHttpClient {
   }
 
   private mergeConfig(config?: AxiosRequestConfig): AxiosRequestConfig {
-    const params = config?.params
-      ? { ...this.defaultParams, ...config.params }
-      : this.defaultParams
-    const headers = config?.headers
-      ? { ...this.defaultHeaders, ...config.headers }
-      : this.defaultHeaders
+    let params = this.defaultParams
+    if (config && config.params) {
+      params = { ...this.defaultParams, ...config.params }
+    }
+    const headers = { ...this.defaultHeaders }
+    if (config && config.headers) {
+      for (const key of Object.keys(config.headers)) {
+        const val = config.headers[key]
+        if (typeof val === 'string') {
+          headers[key] = val
+        }
+      }
+    }
 
     return {
       ...config,

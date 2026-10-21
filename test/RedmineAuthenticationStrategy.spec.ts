@@ -8,7 +8,7 @@ import { MockHttpClient } from './helpers/MockHttpClient'
 describe('RedmineAuthenticationStrategy', () => {
   const validAtomKey = 'testatomkeyredmine1234567890abcdef'
 
-  it('deve autenticar com sucesso e mapear MemberDTO com as credenciais', async () => {
+  it('deve autenticar com sucesso e mapear ConnectionIdentity com as credenciais', async () => {
     const httpClient = new MockHttpClient()
     httpClient.setRoute('GET', '/users/current.json', 200, userFixture)
     httpClient.setRoute(
@@ -32,14 +32,12 @@ describe('RedmineAuthenticationStrategy', () => {
 
     expect(result.isSuccess()).toBe(true)
     if (result.isSuccess()) {
-      const { member, credentials } = result.success
-      expect(member.id).toBe(1)
-      expect(member.login).toBe('admin')
-      expect(member.firstname).toBe('Redmine')
-      expect(member.lastname).toBe('Admin')
-      expect(member.admin).toBe(true)
-      expect(member.customFields.length).toBe(1)
-      expect(member.customFields[0].name).toBe('Cargo')
+      const { identity, credentials } = result.success
+      expect(identity.kind).toBe('human')
+      expect(identity.providerId).toBe('redmine')
+      expect(identity.tenantId).toBe('https://redmine.test')
+      expect(identity.providerSubjectId).toBe('1')
+      expect(identity.displayName).toBe('Redmine Admin')
       expect(credentials.apiKey).toBe('valid-api-key')
       expect(credentials.atomKey).toBe(validAtomKey)
     }

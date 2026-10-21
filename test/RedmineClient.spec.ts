@@ -130,15 +130,19 @@ describe('RedmineClient', () => {
     }
   })
 
-  it('deve extrair token de atomKey quando o usuário colar a URL completa do feed Atom', () => {
+  it('deve extrair token de atomKey quando o usuário colar a URL completa do feed Atom', async () => {
     const httpClient = new MockHttpClient()
+    httpClient.setRoute('GET', 'activity.atom', 200, '<feed xmlns="http://www.w3.org/2005/Atom"></feed>', undefined, { key: 'abcde12345fedcba' })
+
     const client = new RedmineClient(httpClient, {
       apiUrl: 'https://redmine.test',
       apiKey: 'key-123',
       atomKey: 'https://redmine.test/activity.atom?key=abcde12345fedcba',
     })
 
-    expect(client.getAtomKey()).toBe('abcde12345fedcba')
+    expect(client.hasAtomFeed()).toBe(true)
+    const res = await client.getActivityAtom()
+    expect(res.isSuccess()).toBe(true)
   })
 
   it('deve armazenar e retornar a versão configurada ou padrão auto', () => {

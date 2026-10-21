@@ -44,7 +44,7 @@ describe('RedmineDataSource', () => {
     })
     expect(authResult.isSuccess()).toBe(true)
     if (authResult.isSuccess()) {
-      expect(authResult.success.member.firstname).toContain('Redmine')
+      expect(authResult.success.identity.displayName).toContain('Redmine')
     }
   })
 

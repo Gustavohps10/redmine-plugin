@@ -147,7 +147,7 @@ export class RedmineTaskProvider implements ITaskProvider {
     checkpoint: { updatedAt: Date; id: string },
     batch: number,
   ): Promise<Either<AppError, TaskDTO[]>> {
-    if (this.client.getAtomKey()) {
+    if (this.client.hasAtomFeed()) {
       return this.pullViaAtom(memberId, checkpoint, batch)
     }
 
@@ -280,7 +280,6 @@ export class RedmineTaskProvider implements ITaskProvider {
     checkpoint: { updatedAt: Date; id: string },
     batch: number,
   ): Promise<Either<AppError, TaskDTO[]>> {
-    const atomKey = this.client.getAtomKey()
     const apiUrl = this.client.getApiUrl()
     const checkpointDate = checkpoint.updatedAt
     const hasValidCheckpoint =
@@ -309,7 +308,6 @@ export class RedmineTaskProvider implements ITaskProvider {
     }
 
     const atomRes = await this.client.getActivityAtom({
-      key: atomKey,
       show_issues: '1',
       show_time_entries: '1',
     })

@@ -1,10 +1,8 @@
-import { mapMemberCustomFields } from './mapMemberCustomFields'
 import {
   AppError,
   AuthenticationResult,
   Either,
   IAuthenticationStrategy,
-  MemberDTO,
 } from '@mr-tick/sdk'
 
 import { RedmineClient } from '../../../client/RedmineClient'
@@ -34,9 +32,10 @@ export class RedmineAuthenticationStrategy
     const userResult = await this.client.getCurrentUser()
     if (userResult.isFailure()) return userResult.forwardFailure()
 
-    const rawAtomKey = input?.credentials?.atomKey
-      ? input.credentials.atomKey
-      : this.client.getAtomKey()
+    let rawAtomKey = ''
+    if (input?.credentials?.atomKey) {
+      rawAtomKey = input.credentials.atomKey
+    }
 
     if (!rawAtomKey || !rawAtomKey.trim()) {
       return Either.failure(
@@ -49,18 +48,6 @@ export class RedmineAuthenticationStrategy
 
     const redmineUser = userResult.success.user
 
-    const member: MemberDTO = {
-      id: redmineUser.id,
-      login: redmineUser.login,
-      firstname: redmineUser.firstname,
-      lastname: redmineUser.lastname,
-      admin: Boolean(redmineUser.admin),
-      createdOn: redmineUser.created_on,
-      lastLoginOn: redmineUser.last_login_on
-        ? redmineUser.last_login_on
-        : redmineUser.created_on,
-      customFields: mapMemberCustomFields(redmineUser.custom_fields),
-    }
 
     const credentialsRecord: Record<string, string> = {}
     const apiKey = input?.credentials?.apiKey
@@ -68,8 +55,16 @@ export class RedmineAuthenticationStrategy
     const atomKey = input?.credentials?.atomKey
     if (atomKey) credentialsRecord.atomKey = atomKey
 
+    const identity = {
+      kind: 'human' as const,
+      providerId: 'redmine',
+      tenantId: input?.configuration?.apiUrl ?? '',
+      providerSubjectId: String(redmineUser.id),
+      displayName: `${redmineUser.firstname} ${redmineUser.lastname}`.trim(),
+    }
+
     return Either.success({
-      member,
+      identity,
       credentials: credentialsRecord,
     })
   }
