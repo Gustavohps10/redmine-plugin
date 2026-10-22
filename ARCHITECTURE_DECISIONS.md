@@ -63,7 +63,7 @@ Se o conector enviar o cabeçalho `X-Redmine-API-Key` durante uma chamada ao fee
 
 ### A Solução Adotada
 1. No método `validateAtomKey` do `RedmineClient`, sanitizamos o token e validamos o formato alfanumérico.
-2. Disparamos a requisição de validação para `/activity.atom?key=${atomKey}` **explicitamente sem o cabeçalho `X-Redmine-API-Key`**.
+2. Disparamos a requisição de validação para `/issues/changes.atom?key=${atomKey}` **explicitamente sem o cabeçalho `X-Redmine-API-Key`**.
 3. Se a chave for inválida ou não pertencer a nenhum usuário ativo, o Redmine retorna a página HTML de login (`/login`) ou erro HTTP. O conector detecta essa resposta e falha imediatamente na `RedmineAuthenticationStrategy` com mensagem clara: `"Chave de acesso ao feed Atom inválida."`.
 
 ---
