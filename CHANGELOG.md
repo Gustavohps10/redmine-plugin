@@ -1,5 +1,11 @@
 # @timelapse/redmine-plugin
 
+## 0.9.0
+
+### Minor Changes
+
+- 6cac943: Adopt SDK 0.10.0 and require host API >=0.10.0 with canonical addon capabilities and connection authentication contracts.
+
 ## 0.8.2
 
 ### Patch Changes
