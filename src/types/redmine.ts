@@ -1,40 +1,40 @@
-export interface RedmineIdName {
+export type RedmineIdName = {
   id: number
   name: string
 }
 
-export interface RedmineCustomField {
+export type RedmineCustomField = {
   id: number
   name: string
   value?: string | string[] | null
   multiple?: boolean
 }
 
-export interface RedmineUserAPI {
+export type RedmineUserAPI = {
   id: number
-  login: string
+  login?: string
   admin?: boolean
   firstname: string
   lastname: string
   mail?: string
   created_on: string
-  last_login_on?: string
+  last_login_on?: string | null
   api_key?: string
   custom_fields?: RedmineCustomField[]
 }
 
-export interface RedmineUserResponse {
+export type RedmineUserResponse = {
   user: RedmineUserAPI
 }
 
-export interface RedmineUsersResponse {
+export type RedmineUsersResponse = {
   users: RedmineUserAPI[]
   total_count: number
   offset: number
   limit: number
 }
 
-export interface RedmineIssueAPI {
+export type RedmineIssueAPI = {
   id: number
   project: RedmineIdName
   tracker?: RedmineIdName
@@ -44,53 +44,53 @@ export interface RedmineIssueAPI {
   assigned_to?: RedmineIdName
   subject: string
   description?: string
-  start_date?: string
-  due_date?: string
+  start_date?: string | null
+  due_date?: string | null
   done_ratio?: number
-  estimated_hours?: number
+  estimated_hours?: number | null
   spent_hours?: number
   created_on: string
   updated_on: string
   custom_fields?: RedmineCustomField[]
 }
 
-export interface RedmineIssuesResponse {
+export type RedmineIssuesResponse = {
   issues: RedmineIssueAPI[]
   total_count: number
   offset: number
   limit: number
 }
 
-export interface RedmineIssueResponse {
+export type RedmineIssueResponse = {
   issue: RedmineIssueAPI
 }
 
-export interface RedmineTimeEntryAPI {
+export type RedmineTimeEntryAPI = {
   id: number
   project: RedmineIdName
   issue?: { id: number }
   user: RedmineIdName
   activity: RedmineIdName
   hours: number
-  comments?: string
+  comments?: string | null
   spent_on: string
   created_on: string
   updated_on: string
   custom_fields?: RedmineCustomField[]
 }
 
-export interface RedmineTimeEntriesResponse {
+export type RedmineTimeEntriesResponse = {
   time_entries: RedmineTimeEntryAPI[]
   total_count: number
   offset: number
   limit: number
 }
 
-export interface RedmineTimeEntryResponse {
+export type RedmineTimeEntryResponse = {
   time_entry: RedmineTimeEntryAPI
 }
 
-export interface RedmineCreateTimeEntryPayload {
+export type RedmineCreateTimeEntryPayload = {
   time_entry: {
     issue_id: number
     activity_id: number
@@ -101,7 +101,7 @@ export interface RedmineCreateTimeEntryPayload {
   }
 }
 
-export interface RedmineUpdateTimeEntryPayload {
+export type RedmineUpdateTimeEntryPayload = {
   time_entry: {
     issue_id?: number
     activity_id?: number
@@ -111,41 +111,41 @@ export interface RedmineUpdateTimeEntryPayload {
   }
 }
 
-export interface RedmineActivityAPI {
+export type RedmineActivityAPI = {
   id: number
   name: string
   is_default?: boolean
 }
 
-export interface RedmineActivitiesResponse {
+export type RedmineActivitiesResponse = {
   time_entry_activities: RedmineActivityAPI[]
 }
 
-export interface RedmineStatusAPI {
+export type RedmineStatusAPI = {
   id: number
   name: string
   is_closed?: boolean
 }
 
-export interface RedmineStatusesResponse {
+export type RedmineStatusesResponse = {
   issue_statuses: RedmineStatusAPI[]
 }
 
-export interface RedminePriorityAPI {
+export type RedminePriorityAPI = {
   id: number
   name: string
   is_default?: boolean
 }
 
-export interface RedminePrioritiesResponse {
+export type RedminePrioritiesResponse = {
   issue_priorities: RedminePriorityAPI[]
 }
 
-export interface RedmineTrackerAPI {
+export type RedmineTrackerAPI = {
   id: number
   name: string
 }
 
-export interface RedmineTrackersResponse {
+export type RedmineTrackersResponse = {
   trackers: RedmineTrackerAPI[]
 }

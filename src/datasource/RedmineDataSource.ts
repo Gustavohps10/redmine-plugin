@@ -6,8 +6,8 @@ import {
   IDataSourceInstance,
 } from '@mr-tick/sdk'
 
-import { configurationFieldGroups, credentialFieldGroups } from './configFields'
 import { RedmineClient } from '../client/RedmineClient'
+import { configurationFieldGroups, credentialFieldGroups } from './configFields'
 import { getProvidersForVersion } from './versions/index'
 
 export class RedmineDataSource implements IDataSource {
@@ -41,7 +41,6 @@ export class RedmineDataSource implements IDataSource {
     const providers = getProvidersForVersion(client, client.getVersion())
 
     return {
-      authStrategy: providers.auth,
       tasksProvider: providers.task,
       timeEntriesProvider: providers.timeEntry,
       membersProvider: providers.member,

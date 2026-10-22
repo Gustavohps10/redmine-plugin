@@ -1,6 +1,9 @@
 import { AddonContext, IAddon } from '@mr-tick/sdk'
 
+import { AxiosHttpClient } from './client/AxiosHttpClient'
+import { RedmineClient } from './client/RedmineClient'
 import { RedmineDataSource } from './datasource'
+import { getProvidersForVersion } from './datasource/versions/index'
 import { REDMINE_CSS } from './theme'
 
 export default class RedmineAddon implements IAddon {
@@ -10,6 +13,43 @@ export default class RedmineAddon implements IAddon {
     this.activeContext = context
 
     context.contributions.dataSources.register(new RedmineDataSource())
+
+    context.contributions.connections.registerAuthenticator({
+      method: 'credentials',
+      authProfileId: 'redmine-instance',
+      supportsRefresh: false,
+      supportsRevocation: false,
+      authenticate: async (credentials, configuration) => {
+        let apiUrl = ''
+        if (typeof configuration.apiUrl === 'string') {
+          apiUrl = configuration.apiUrl
+        }
+        let apiKey = ''
+        if (typeof credentials.apiKey === 'string') {
+          apiKey = credentials.apiKey
+        }
+        let atomKey = ''
+        if (typeof credentials.atomKey === 'string') {
+          atomKey = credentials.atomKey
+        }
+        let version = 'auto'
+        if (typeof configuration.redmineVersion === 'string') {
+          version = configuration.redmineVersion
+        }
+
+        const client = new RedmineClient(new AxiosHttpClient(), {
+          apiUrl,
+          apiKey,
+          atomKey,
+          version,
+        })
+        const providers = getProvidersForVersion(client, version)
+        return providers.auth.authenticate({
+          credentials: { apiKey, atomKey },
+          configuration: { apiUrl },
+        })
+      },
+    })
 
     context.contributions.menus.sidebar.register({
       id: 'redmine-sidebar',
@@ -81,6 +121,9 @@ export default class RedmineAddon implements IAddon {
   deactivate(): void {
     if (!this.activeContext) return
 
+    this.activeContext.contributions.connections.unregisterAuthenticator(
+      'redmine-instance',
+    )
     this.activeContext.contributions.themes.unregister('redmine-classic-theme')
     this.activeContext = null
   }

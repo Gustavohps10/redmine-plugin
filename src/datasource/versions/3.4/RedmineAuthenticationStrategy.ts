@@ -1,9 +1,4 @@
-import {
-  AppError,
-  AuthenticationResult,
-  Either,
-  IAuthenticationStrategy,
-} from '@mr-tick/sdk'
+import { AppError, AuthenticationResult, Either } from '@mr-tick/sdk'
 
 import { RedmineClient } from '../../../client/RedmineClient'
 
@@ -21,14 +16,17 @@ export interface RedmineAuthInput {
   credentials?: RedmineAuthCredentials
 }
 
-export class RedmineAuthenticationStrategy
-  implements IAuthenticationStrategy<RedmineAuthInput>
-{
+export type RedmineAuthorizedResult = Extract<
+  AuthenticationResult,
+  { kind: 'authorized' }
+>
+
+export class RedmineAuthenticationStrategy {
   constructor(private readonly client: RedmineClient) {}
 
   async authenticate(
     input?: RedmineAuthInput,
-  ): Promise<Either<AppError, AuthenticationResult>> {
+  ): Promise<Either<AppError, RedmineAuthorizedResult>> {
     const userResult = await this.client.getCurrentUser()
     if (userResult.isFailure()) return userResult.forwardFailure()
 
@@ -48,22 +46,27 @@ export class RedmineAuthenticationStrategy
 
     const redmineUser = userResult.success.user
 
-
     const credentialsRecord: Record<string, string> = {}
     const apiKey = input?.credentials?.apiKey
     if (apiKey) credentialsRecord.apiKey = apiKey
     const atomKey = input?.credentials?.atomKey
     if (atomKey) credentialsRecord.atomKey = atomKey
 
-    const identity = {
-      kind: 'human' as const,
+    let tenantId = ''
+    if (input?.configuration?.apiUrl) {
+      tenantId = input.configuration.apiUrl
+    }
+
+    const identity: RedmineAuthorizedResult['identity'] = {
+      kind: 'human',
       providerId: 'redmine',
-      tenantId: input?.configuration?.apiUrl ?? '',
+      tenantId,
       providerSubjectId: String(redmineUser.id),
       displayName: `${redmineUser.firstname} ${redmineUser.lastname}`.trim(),
     }
 
     return Either.success({
+      kind: 'authorized',
       identity,
       credentials: credentialsRecord,
     })

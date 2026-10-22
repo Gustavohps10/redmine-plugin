@@ -1,4 +1,3 @@
-import { mapMemberCustomFields } from './mapMemberCustomFields'
 import {
   AppError,
   Either,
@@ -10,6 +9,7 @@ import {
 
 import { RedmineClient } from '../../../client/RedmineClient'
 import { RedmineUserAPI } from '../../../types/redmine'
+import { mapMemberCustomFields } from './mapMemberCustomFields'
 
 export class RedmineMemberProvider implements IMemberProvider {
   constructor(private readonly client: RedmineClient) {}
@@ -25,7 +25,9 @@ export class RedmineMemberProvider implements IMemberProvider {
     return Either.success(member)
   }
 
-  public async findById(id: string): Promise<Either<AppError, MemberDTO | null>> {
+  public async findById(
+    id: string,
+  ): Promise<Either<AppError, MemberDTO | null>> {
     const userResult = await this.client.getUserById(id)
     if (userResult.isFailure()) {
       if (userResult.failure.statusCode === 404) return Either.success(null)
@@ -65,16 +67,19 @@ export class RedmineMemberProvider implements IMemberProvider {
   }
 
   private mapUserToDTO(user: RedmineUserAPI): MemberDTO {
+    let login = ''
+    if (user.login !== undefined) login = user.login
+    let lastLoginOn = ''
+    if (user.last_login_on !== undefined && user.last_login_on !== null)
+      lastLoginOn = user.last_login_on
     return {
       id: user.id,
-      login: user.login,
+      login,
       firstname: user.firstname,
       lastname: user.lastname,
       admin: Boolean(user.admin),
       createdOn: user.created_on,
-      lastLoginOn: user.last_login_on
-        ? user.last_login_on
-        : user.created_on,
+      lastLoginOn,
       customFields: mapMemberCustomFields(user.custom_fields),
     }
   }

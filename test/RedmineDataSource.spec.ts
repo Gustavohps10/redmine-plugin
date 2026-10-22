@@ -1,7 +1,9 @@
 import { DataSourceContext } from '@mr-tick/sdk'
 import { describe, expect, it } from 'vitest'
 
+import { RedmineClient } from '../src/client/RedmineClient'
 import { RedmineDataSource } from '../src/datasource'
+import { RedmineAuthenticationStrategy } from '../src/datasource/versions/3.4/RedmineAuthenticationStrategy'
 import userFixture from './fixtures/user.json'
 import { MockHttpClient } from './helpers/MockHttpClient'
 
@@ -25,6 +27,10 @@ describe('RedmineDataSource', () => {
       `<?xml version="1.0" encoding="UTF-8"?><feed xmlns="http://www.w3.org/2005/Atom"><link rel="self" href="https://redmine.test/issues/changes.atom?key=${validAtomKey}"/><title>Activity</title></feed>`,
     )
     const context: DataSourceContext = {
+      scope: {
+        workspaceId: 'workspace-test',
+        connectionInstanceId: 'connection-test',
+      },
       httpClient,
       config: { apiUrl: 'https://redmine.test' },
       credentials: { apiKey: 'key-123', atomKey: validAtomKey },
@@ -33,13 +39,15 @@ describe('RedmineDataSource', () => {
     const dataSource = new RedmineDataSource()
     const instance = dataSource.createInstance(context)
 
-    expect(instance.authStrategy).toBeDefined()
+    expect(instance).not.toHaveProperty('authStrategy')
     expect(instance.tasksProvider).toBeDefined()
     expect(instance.timeEntriesProvider).toBeDefined()
     expect(instance.membersProvider).toBeDefined()
     expect(instance.metadataProvider).toBeDefined()
 
-    const authResult = await instance.authStrategy.authenticate({
+    const authResult = await new RedmineAuthenticationStrategy(
+      RedmineClient.fromContext(context),
+    ).authenticate({
       credentials: { apiKey: 'key-123', atomKey: validAtomKey },
     })
     expect(authResult.isSuccess()).toBe(true)
@@ -53,15 +61,18 @@ describe('RedmineDataSource', () => {
     httpClient.setRoute('GET', '/users/current.json', 401, {}, 'CHAVE_INVALIDA')
 
     const context: DataSourceContext = {
+      scope: {
+        workspaceId: 'workspace-test',
+        connectionInstanceId: 'connection-test',
+      },
       httpClient,
       config: { apiUrl: 'https://redmine.test' },
       credentials: { apiKey: 'wrong-key' },
     }
 
-    const dataSource = new RedmineDataSource()
-    const instance = dataSource.createInstance(context)
-
-    const authResult = await instance.authStrategy.authenticate({
+    const authResult = await new RedmineAuthenticationStrategy(
+      RedmineClient.fromContext(context),
+    ).authenticate({
       credentials: { apiKey: 'wrong-key' },
     })
     expect(authResult.isFailure()).toBe(true)
@@ -70,6 +81,10 @@ describe('RedmineDataSource', () => {
   it('deve instanciar providers corretamente quando versão 3.4 for explicitamente selecionada', () => {
     const httpClient = new MockHttpClient()
     const context: DataSourceContext = {
+      scope: {
+        workspaceId: 'workspace-test',
+        connectionInstanceId: 'connection-test',
+      },
       httpClient,
       config: { apiUrl: 'https://redmine.test', redmineVersion: '3.4' },
       credentials: { apiKey: 'key-123' },
@@ -87,6 +102,10 @@ describe('RedmineDataSource', () => {
   it('deve instanciar providers corretamente quando versão 5.0 for explicitamente selecionada', () => {
     const httpClient = new MockHttpClient()
     const context: DataSourceContext = {
+      scope: {
+        workspaceId: 'workspace-test',
+        connectionInstanceId: 'connection-test',
+      },
       httpClient,
       config: { apiUrl: 'https://redmine.test', redmineVersion: '5.0' },
       credentials: { apiKey: 'key-123' },
@@ -104,6 +123,10 @@ describe('RedmineDataSource', () => {
   it('deve instanciar providers corretamente quando versão 6.0 for explicitamente selecionada', () => {
     const httpClient = new MockHttpClient()
     const context: DataSourceContext = {
+      scope: {
+        workspaceId: 'workspace-test',
+        connectionInstanceId: 'connection-test',
+      },
       httpClient,
       config: { apiUrl: 'https://redmine.test', redmineVersion: '6.0' },
       credentials: { apiKey: 'key-123' },
@@ -118,4 +141,3 @@ describe('RedmineDataSource', () => {
     expect(instance.metadataProvider).toBeDefined()
   })
 })
-

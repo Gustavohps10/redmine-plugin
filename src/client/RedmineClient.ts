@@ -13,6 +13,18 @@ import {
   RedmineUpdateTimeEntryPayload,
   RedmineUserResponse,
 } from '../types/redmine'
+import {
+  isRedmineActivitiesResponse,
+  isRedmineIssueResponse,
+  isRedmineIssuesResponse,
+  isRedminePrioritiesResponse,
+  isRedmineStatusesResponse,
+  isRedmineTimeEntriesResponse,
+  isRedmineTimeEntryResponse,
+  isRedmineTrackersResponse,
+  isRedmineUserResponse,
+  isTextResponse,
+} from './redmine-response-validators'
 
 export interface RedmineClientConfig {
   apiUrl: string
@@ -28,10 +40,7 @@ export class RedmineClient {
   private readonly version: string
   private readonly httpClient: IHttpClient
 
-  constructor(
-    httpClient: IHttpClient,
-    config: RedmineClientConfig,
-  ) {
+  constructor(httpClient: IHttpClient, config: RedmineClientConfig) {
     let apiUrl = ''
     if (config.apiUrl) {
       apiUrl = config.apiUrl.replace(/\/+$/, '')
@@ -60,7 +69,9 @@ export class RedmineClient {
     }
     this.version = version
 
-    const headers: Record<string, string> = {}
+    const headers: Record<string, string> = {
+      Accept: 'application/json',
+    }
     if (this.apiKey) {
       headers['X-Redmine-API-Key'] = this.apiKey
     }
@@ -86,7 +97,10 @@ export class RedmineClient {
       apiKey = context.credentials.apiKey
     }
     let atomKey = ''
-    if (context.credentials && typeof context.credentials.atomKey === 'string') {
+    if (
+      context.credentials &&
+      typeof context.credentials.atomKey === 'string'
+    ) {
       atomKey = context.credentials.atomKey
     }
     let version = 'auto'
@@ -115,7 +129,8 @@ export class RedmineClient {
 
   private isHtmlLoginResponse(raw: string): boolean {
     const trimmed = raw.trimStart().toLowerCase()
-    const isHtml = trimmed.startsWith('<!doctype html') || trimmed.startsWith('<html')
+    const isHtml =
+      trimmed.startsWith('<!doctype html') || trimmed.startsWith('<html')
     if (isHtml) {
       return true
     }
@@ -139,10 +154,14 @@ export class RedmineClient {
     return Either.success(undefined)
   }
 
-  public async getCurrentUser(): Promise<Either<AppError, RedmineUserResponse>> {
+  public async getCurrentUser(): Promise<
+    Either<AppError, RedmineUserResponse>
+  > {
     const validation = this.validateConfig()
     if (validation.isFailure()) return validation.forwardFailure()
-    return this.httpClient.get<RedmineUserResponse>('/users/current.json')
+    return this.httpClient.get<RedmineUserResponse>('/users/current.json', {
+      responseValidator: isRedmineUserResponse,
+    })
   }
 
   public async getUserById(
@@ -150,7 +169,9 @@ export class RedmineClient {
   ): Promise<Either<AppError, RedmineUserResponse>> {
     const validation = this.validateConfig()
     if (validation.isFailure()) return validation.forwardFailure()
-    return this.httpClient.get<RedmineUserResponse>(`/users/${id}.json`)
+    return this.httpClient.get<RedmineUserResponse>(`/users/${id}.json`, {
+      responseValidator: isRedmineUserResponse,
+    })
   }
 
   public async listIssues(
@@ -159,6 +180,7 @@ export class RedmineClient {
     const validation = this.validateConfig()
     if (validation.isFailure()) return validation.forwardFailure()
     return this.httpClient.get<RedmineIssuesResponse>('/issues.json', {
+      responseValidator: isRedmineIssuesResponse,
       params,
     })
   }
@@ -168,7 +190,9 @@ export class RedmineClient {
   ): Promise<Either<AppError, RedmineIssueResponse>> {
     const validation = this.validateConfig()
     if (validation.isFailure()) return validation.forwardFailure()
-    return this.httpClient.get<RedmineIssueResponse>(`/issues/${id}.json`)
+    return this.httpClient.get<RedmineIssueResponse>(`/issues/${id}.json`, {
+      responseValidator: isRedmineIssueResponse,
+    })
   }
 
   public async getActivityAtom(
@@ -188,7 +212,12 @@ export class RedmineClient {
     }
 
     const atomRes = await this.httpClient.get<string>('activity.atom', {
+      responseValidator: isTextResponse,
       params: requestParams,
+      responseType: 'text',
+      headers: {
+        Accept: 'application/atom+xml, application/xml, text/xml',
+      },
     })
     if (atomRes.isFailure()) return atomRes.forwardFailure()
 
@@ -234,7 +263,9 @@ export class RedmineClient {
     }
 
     const atomRes = await this.httpClient.get<string>('issues/changes.atom', {
+      responseValidator: isTextResponse,
       params: { key: sanitizedKey },
+      responseType: 'text',
       headers: {
         Accept: 'application/atom+xml, application/xml, text/xml',
         'X-Redmine-API-Key': '',
@@ -264,7 +295,7 @@ export class RedmineClient {
     if (validation.isFailure()) return validation.forwardFailure()
     return this.httpClient.get<RedmineTimeEntriesResponse>(
       '/time_entries.json',
-      { params },
+      { responseValidator: isRedmineTimeEntriesResponse, params },
     )
   }
 
@@ -275,6 +306,7 @@ export class RedmineClient {
     if (validation.isFailure()) return validation.forwardFailure()
     return this.httpClient.get<RedmineTimeEntryResponse>(
       `/time_entries/${id}.json`,
+      { responseValidator: isRedmineTimeEntryResponse },
     )
   }
 
@@ -286,6 +318,7 @@ export class RedmineClient {
     return this.httpClient.post<RedmineTimeEntryResponse>(
       '/time_entries.json',
       payload,
+      { responseValidator: isRedmineTimeEntryResponse },
     )
   }
 
@@ -295,13 +328,24 @@ export class RedmineClient {
   ): Promise<Either<AppError, void>> {
     const validation = this.validateConfig()
     if (validation.isFailure()) return validation.forwardFailure()
-    return this.httpClient.put<void>(`/time_entries/${id}.json`, payload)
+    const result = await this.httpClient.put<string>(
+      `/time_entries/${id}.json`,
+      payload,
+      { responseType: 'text', responseValidator: isTextResponse },
+    )
+    if (result.isFailure()) return result.forwardFailure()
+    return Either.success()
   }
 
   public async deleteTimeEntry(id: string): Promise<Either<AppError, void>> {
     const validation = this.validateConfig()
     if (validation.isFailure()) return validation.forwardFailure()
-    return this.httpClient.delete<void>(`/time_entries/${id}.json`)
+    const result = await this.httpClient.delete<string>(
+      `/time_entries/${id}.json`,
+      { responseType: 'text', responseValidator: isTextResponse },
+    )
+    if (result.isFailure()) return result.forwardFailure()
+    return Either.success()
   }
 
   public async getActivities(): Promise<
@@ -311,6 +355,7 @@ export class RedmineClient {
     if (validation.isFailure()) return validation.forwardFailure()
     return this.httpClient.get<RedmineActivitiesResponse>(
       '/enumerations/time_entry_activities.json',
+      { responseValidator: isRedmineActivitiesResponse },
     )
   }
 
@@ -321,6 +366,7 @@ export class RedmineClient {
     if (validation.isFailure()) return validation.forwardFailure()
     return this.httpClient.get<RedmineStatusesResponse>(
       '/issue_statuses.json',
+      { responseValidator: isRedmineStatusesResponse },
     )
   }
 
@@ -331,6 +377,7 @@ export class RedmineClient {
     if (validation.isFailure()) return validation.forwardFailure()
     return this.httpClient.get<RedminePrioritiesResponse>(
       '/enumerations/issue_priorities.json',
+      { responseValidator: isRedminePrioritiesResponse },
     )
   }
 
@@ -339,6 +386,8 @@ export class RedmineClient {
   > {
     const validation = this.validateConfig()
     if (validation.isFailure()) return validation.forwardFailure()
-    return this.httpClient.get<RedmineTrackersResponse>('/trackers.json')
+    return this.httpClient.get<RedmineTrackersResponse>('/trackers.json', {
+      responseValidator: isRedmineTrackersResponse,
+    })
   }
 }
