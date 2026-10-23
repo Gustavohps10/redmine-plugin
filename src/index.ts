@@ -12,44 +12,68 @@ export default class RedmineAddon implements IAddon {
   activate(context: AddonContext): void {
     this.activeContext = context
 
-    context.contributions.dataSources.register(new RedmineDataSource())
-
-    context.contributions.connections.registerAuthenticator({
-      method: 'credentials',
-      authProfileId: 'redmine-instance',
-      supportsRefresh: false,
-      supportsRevocation: false,
-      authenticate: async (credentials, configuration) => {
-        let apiUrl = ''
-        if (typeof configuration.apiUrl === 'string') {
-          apiUrl = configuration.apiUrl
-        }
-        let apiKey = ''
-        if (typeof credentials.apiKey === 'string') {
-          apiKey = credentials.apiKey
-        }
-        let atomKey = ''
-        if (typeof credentials.atomKey === 'string') {
-          atomKey = credentials.atomKey
-        }
-        let version = 'auto'
-        if (typeof configuration.redmineVersion === 'string') {
-          version = configuration.redmineVersion
-        }
-
-        const client = new RedmineClient(new AxiosHttpClient(), {
-          apiUrl,
-          apiKey,
-          atomKey,
-          version,
-        })
-        const providers = getProvidersForVersion(client, version)
-        return providers.auth.authenticate({
-          credentials: { apiKey, atomKey },
-          configuration: { apiUrl },
-        })
+    const profiles = context.contributions.connections.registerProfiles([
+      {
+        connectionProfileId: 'redmine-instance',
+        cardinality: 'multi',
+        default: true,
+        allowedAuthProfileIds: ['redmine-instance'],
+        defaultAuthProfileId: 'redmine-instance',
       },
-    })
+    ])
+
+    if (profiles.isFailure()) {
+      void context.host.notifications.error(profiles.failure.messageKey)
+      this.activeContext = null
+      return
+    }
+
+    const authenticator =
+      context.contributions.connections.registerAuthenticator({
+        method: 'credentials',
+        authProfileId: 'redmine-instance',
+        supportsRefresh: false,
+        supportsRevocation: false,
+        authenticate: async (credentials, configuration) => {
+          let apiUrl = ''
+          if (typeof configuration.apiUrl === 'string') {
+            apiUrl = configuration.apiUrl
+          }
+          let apiKey = ''
+          if (typeof credentials.apiKey === 'string') {
+            apiKey = credentials.apiKey
+          }
+          let atomKey = ''
+          if (typeof credentials.atomKey === 'string') {
+            atomKey = credentials.atomKey
+          }
+          let version = 'auto'
+          if (typeof configuration.redmineVersion === 'string') {
+            version = configuration.redmineVersion
+          }
+
+          const client = new RedmineClient(new AxiosHttpClient(), {
+            apiUrl,
+            apiKey,
+            atomKey,
+            version,
+          })
+          const providers = getProvidersForVersion(client, version)
+          return providers.auth.authenticate({
+            credentials: { apiKey, atomKey },
+            configuration: { apiUrl },
+          })
+        },
+      })
+
+    if (authenticator.isFailure()) {
+      context.contributions.connections.unregisterProfiles()
+      void context.host.notifications.error(authenticator.failure.messageKey)
+      this.activeContext = null
+      return
+    }
+
+    context.contributions.dataSources.register(new RedmineDataSource())
 
     context.contributions.menus.sidebar.register({
       id: 'redmine-sidebar',
@@ -120,6 +144,8 @@ export default class RedmineAddon implements IAddon {
 
   deactivate(): void {
     if (!this.activeContext) return
+
+    this.activeContext.contributions.connections.unregisterProfiles()
 
     this.activeContext.contributions.connections.unregisterAuthenticator(
       'redmine-instance',

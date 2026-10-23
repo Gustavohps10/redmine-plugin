@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/mistertick"><img src="https://img.shields.io/badge/Mr--Tick%20SDK-%3E%3D0.10.0-blue.svg" alt="Mr-Tick SDK" /></a>
+  <a href="https://github.com/mistertick"><img src="https://img.shields.io/badge/Mr--Tick%20SDK-%3E%3D0.11.0-blue.svg" alt="Mr-Tick SDK" /></a>
   <a href="#"><img src="https://img.shields.io/badge/Capability-dataSource-orange.svg" alt="DataSource" /></a>
   <a href="https://github.com/Gustavohps10/redmine-plugin/releases"><img src="https://img.shields.io/github/v/release/Gustavohps10/redmine-plugin" alt="Version" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License" /></a>
@@ -45,13 +45,13 @@ O core coordena as consultas de correlação; o create do addon faz somente o PO
 
 O create retorna o registro recebido do Redmine; após PUT confirmado, o addon retorna o ID e o core consulta o estado canônico. Se essa leitura falhar, a recuperação repete somente GET, preservando a edição sem repetir PUT. Horas, comentários e timestamps confirmados pelo servidor substituem os valores locais. A busca usa usuário, tarefa e a data original da tentativa, com paginação e janela de um dia para cada lado. O limite de comentários inclui o marcador e é validado antes da requisição.
 
-Para desenvolvimento contra contratos ainda não publicados, vínculos locais devem ficar restritos a perfis de desenvolvimento. A entrega atual usa o SDK 0.10 publicado no npm; mantenha package.json, lockfile e requiredApiVersion alinhados.
+Para desenvolvimento contra contratos ainda não publicados, vínculos locais devem ficar restritos a perfis de desenvolvimento. Esta revisão local prepara o contrato do SDK 0.11; atualize package.json e lockfile após a publicação antes de distribuir o addon.
 
 O pull de apontamentos agora usa obrigatoriamente o contrato de páginas do SDK: `items`, `checkpoint`, `hasMore` e `snapshotId`. O cursor do snapshot detecta mudanças de conteúdo mesmo quando `updated_on` não muda; snapshots incompletos continuam rejeitados. Não há caminho de compatibilidade com o formato anterior de arrays. Apontamentos vinculados apenas a um projeto mantêm a tarefa ausente, sem converter o ID do projeto em ID de issue.
 
 O addon consome o SDK publicado (`@mr-tick/sdk`) e mantém o lockfile alinhado à versão mínima de API para a qual foi compilado. O CLI do SDK grava essa versão em `requiredApiVersion` ao gerar o pacote `.tladdon`. Um build com SDK vinculado localmente é útil para desenvolvimento, mas não substitui a validação da dependência publicada e do lockfile.
 
-O SDK 0.10 organiza o contexto em `core`, `contributions` e `host`. O Redmine registra datasource, menus, comandos e tema em `contributions`, e usa as notificações de `host`. Os IDs de comandos e temas permanecem locais ao addon; o host aplica o namespace e limpa as contribuições ao desativá-lo.
+O SDK 0.11 organiza o contexto em `core`, `contributions` e `host`. O Redmine registra datasource, menus, comandos e tema em `contributions`, e usa as notificações de `host`. Os IDs de comandos e temas permanecem locais ao addon; o host aplica o namespace e limpa as contribuições ao desativá-lo.
 
 ## 🔑 Configurações do Plugin
 
@@ -120,10 +120,14 @@ yarn changeset status
   <sub>Licenciado sob a <a href="LICENSE">MIT License</a>. Feito para o ecossistema Mr. Tick.</sub>
 </p>
 
-## Autenticação e contrato do SDK 0.10
+## Autenticação e contrato do SDK 0.11
 
-O manifesto declara `capabilities: [dataSource, theme]` e `requiredApiVersion: ">=0.10.0"`. `RedmineDataSource` expõe os quatro providers de dados; o addon registra um autenticador de credenciais separado em `context.contributions.connections`. O autenticador valida REST e Atom e devolve identidade externa e credenciais ao core, sem exigir um member na resposta de autenticação.
+O manifesto declara `capabilities: [auth, dataSource, theme]` e `requiredApiVersion: ">=0.11.0"`. `RedmineDataSource` expõe os quatro providers de dados; o addon registra um autenticador de credenciais separado em `context.contributions.connections`. O autenticador valida REST e Atom e devolve identidade externa e credenciais ao core, sem exigir um member na resposta de autenticação.
 
 Credenciais de conexão são coordenadas pelo core. Respostas HTTP passam por validadores que aceitam campos legitimamente nulos ou omitidos do Redmine. O transporte preserva status e mensagens do servidor, inclusive 403. O pull de apontamentos preserva comentários ausentes sem fabricar texto ou correlação.
 
 Referências: [SDK](https://mistertick.com/docs), [conexões](https://mistertick.com/docs/apis/connections), [datasources](https://mistertick.com/docs/capabilities/datasources).
+
+## Local SDK transition
+
+This source targets SDK 0.11 and declares `auth` explicitly. Connection profiles and authenticators are registered through `contributions.connections`; datasources do not own profiles. The npm dependency and lockfile will be updated after SDK 0.11 is published. Do not distribute this revision before updating that dependency and building against the published SDK.

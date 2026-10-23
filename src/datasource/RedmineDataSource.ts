@@ -1,6 +1,5 @@
 import {
   AddonSettingsSchema,
-  ConnectionProfileDescriptor,
   DataSourceContext,
   IDataSource,
   IDataSourceInstance,
@@ -11,16 +10,6 @@ import { configurationFieldGroups, credentialFieldGroups } from './configFields'
 import { getProvidersForVersion } from './versions/index'
 
 export class RedmineDataSource implements IDataSource {
-  getConnectionProfiles(): ConnectionProfileDescriptor[] {
-    return [
-      {
-        connectionProfileId: 'redmine-instance',
-        cardinality: 'multi',
-        default: true,
-      },
-    ]
-  }
-
   getConnectionSchema(): AddonSettingsSchema {
     return [
       {

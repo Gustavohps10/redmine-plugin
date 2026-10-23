@@ -1,4 +1,8 @@
-import { AddonConnectionAuthenticator, AddonContext } from '@mr-tick/sdk'
+import {
+  AddonConnectionAuthenticator,
+  AddonContext,
+  Either,
+} from '@mr-tick/sdk'
 import { describe, expect, it, vi } from 'vitest'
 
 import RedmineAddon from '../src/index'
@@ -9,6 +13,7 @@ describe('RedmineAddon Connection Authenticator', () => {
     const registerAuthenticator = vi.fn(
       (authenticator: AddonConnectionAuthenticator) => {
         registeredAuthenticator = authenticator
+        return Either.success()
       },
     )
 
@@ -17,9 +22,9 @@ describe('RedmineAddon Connection Authenticator', () => {
         dataSources: { register: vi.fn(), unregister: vi.fn() },
         connections: {
           registerAuthenticator,
-          unregisterAuthenticator: vi.fn(),
-          registerProfiles: vi.fn(),
-          unregisterProfiles: vi.fn(),
+          unregisterAuthenticator: vi.fn(() => Either.success()),
+          registerProfiles: vi.fn(() => Either.success()),
+          unregisterProfiles: vi.fn(() => Either.success()),
         },
         menus: {
           sidebar: { register: vi.fn() },
@@ -36,6 +41,14 @@ describe('RedmineAddon Connection Authenticator', () => {
     const addon = new RedmineAddon()
     addon.activate(mockContext)
 
+    expect(
+      mockContext.contributions.connections.registerProfiles,
+    ).toHaveBeenCalledWith([
+      expect.objectContaining({
+        connectionProfileId: 'redmine-instance',
+        cardinality: 'multi',
+      }),
+    ])
     expect(registerAuthenticator).toHaveBeenCalledTimes(1)
     expect(registeredAuthenticator).not.toBeNull()
     if (registeredAuthenticator) {
@@ -56,10 +69,10 @@ describe('RedmineAddon Connection Authenticator', () => {
       contributions: {
         dataSources: { register: vi.fn(), unregister: vi.fn() },
         connections: {
-          registerAuthenticator: vi.fn(),
+          registerAuthenticator: vi.fn(() => Either.success()),
           unregisterAuthenticator,
-          registerProfiles: vi.fn(),
-          unregisterProfiles: vi.fn(),
+          registerProfiles: vi.fn(() => Either.success()),
+          unregisterProfiles: vi.fn(() => Either.success()),
         },
         menus: {
           sidebar: { register: vi.fn() },
@@ -77,6 +90,9 @@ describe('RedmineAddon Connection Authenticator', () => {
     addon.activate(mockContext)
     addon.deactivate()
 
+    expect(
+      mockContext.contributions.connections.unregisterProfiles,
+    ).toHaveBeenCalledOnce()
     expect(unregisterAuthenticator).toHaveBeenCalledWith('redmine-instance')
   })
 })
