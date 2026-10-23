@@ -1,5 +1,11 @@
 # @timelapse/redmine-plugin
 
+## 0.10.0
+
+### Minor Changes
+
+- c178f95: Declare the `auth` capability and SDK API requirement >=0.11.0. Register connection profiles independently of the datasource and clean them up during deactivation. This local preparation must consume the published SDK 0.11 dependency and regenerated lockfile before distribution.
+
 ## 0.9.0
 
 ### Minor Changes
