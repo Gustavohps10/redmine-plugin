@@ -23,6 +23,8 @@ describe('RedmineAddon Connection Authenticator', () => {
         connections: {
           registerAuthenticator,
           unregisterAuthenticator: vi.fn(() => Either.success()),
+          registerSchema: vi.fn(() => Either.success()),
+          unregisterSchema: vi.fn(),
           registerProfiles: vi.fn(() => Either.success()),
           unregisterProfiles: vi.fn(() => Either.success()),
         },
@@ -40,6 +42,16 @@ describe('RedmineAddon Connection Authenticator', () => {
 
     const addon = new RedmineAddon()
     addon.activate(mockContext)
+
+    expect(
+      mockContext.contributions.connections.registerSchema,
+    ).toHaveBeenCalledWith(
+      'redmine-instance',
+      expect.arrayContaining([
+        expect.objectContaining({ id: 'access', groups: expect.any(Array) }),
+        expect.objectContaining({ id: 'server', groups: expect.any(Array) }),
+      ]),
+    )
 
     expect(
       mockContext.contributions.connections.registerProfiles,
@@ -71,6 +83,8 @@ describe('RedmineAddon Connection Authenticator', () => {
         connections: {
           registerAuthenticator: vi.fn(() => Either.success()),
           unregisterAuthenticator,
+          registerSchema: vi.fn(() => Either.success()),
+          unregisterSchema: vi.fn(),
           registerProfiles: vi.fn(() => Either.success()),
           unregisterProfiles: vi.fn(() => Either.success()),
         },

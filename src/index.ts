@@ -3,6 +3,10 @@ import { AddonContext, IAddon } from '@mr-tick/sdk'
 import { AxiosHttpClient } from './client/AxiosHttpClient'
 import { RedmineClient } from './client/RedmineClient'
 import { RedmineDataSource } from './datasource'
+import {
+  configurationFieldGroups,
+  credentialFieldGroups,
+} from './datasource/configFields'
 import { getProvidersForVersion } from './datasource/versions/index'
 import { REDMINE_CSS } from './theme'
 
@@ -24,6 +28,24 @@ export default class RedmineAddon implements IAddon {
 
     if (profiles.isFailure()) {
       void context.host.notifications.error(profiles.failure.messageKey)
+      this.activeContext = null
+      return
+    }
+
+    const schema = context.contributions.connections.registerSchema(
+      'redmine-instance',
+      [
+        { id: 'access', label: 'Credenciais', groups: credentialFieldGroups },
+        {
+          id: 'server',
+          label: 'Configurações',
+          groups: configurationFieldGroups,
+        },
+      ],
+    )
+    if (schema.isFailure()) {
+      context.contributions.connections.unregisterProfiles()
+      void context.host.notifications.error(schema.failure.messageKey)
       this.activeContext = null
       return
     }

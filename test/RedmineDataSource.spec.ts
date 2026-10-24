@@ -8,14 +8,6 @@ import userFixture from './fixtures/user.json'
 import { MockHttpClient } from './helpers/MockHttpClient'
 
 describe('RedmineDataSource', () => {
-  it('deve retornar o esquema de conexão com abas de credenciais e configuração', () => {
-    const dataSource = new RedmineDataSource()
-    const schema = dataSource.getConnectionSchema()
-
-    expect(schema).toBeDefined()
-    expect(schema.length).toBe(2)
-  })
-
   it('deve criar uma instância funcional com todos os providers', async () => {
     const httpClient = new MockHttpClient()
     httpClient.setRoute('GET', '/users/current.json', 200, userFixture)

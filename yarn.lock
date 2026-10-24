@@ -705,7 +705,7 @@ __metadata:
   resolution: "@mr-tick/redmine-plugin@workspace:."
   dependencies:
     "@changesets/cli": "npm:^2.29.6"
-    "@mr-tick/sdk": "npm:^0.11.0"
+    "@mr-tick/sdk": "npm:^0.12.0"
     "@types/node": "npm:^24.3.0"
     axios: "npm:^1.7.9"
     rimraf: "npm:^6.0.1"
@@ -715,16 +715,16 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@mr-tick/sdk@npm:^0.11.0":
-  version: 0.11.0
-  resolution: "@mr-tick/sdk@npm:0.11.0"
+"@mr-tick/sdk@npm:^0.12.0":
+  version: 0.12.0
+  resolution: "@mr-tick/sdk@npm:0.12.0"
   dependencies:
     highlight.js: "npm:^11.11.1"
     textile-js: "npm:^2.1.1"
     turndown: "npm:^7.2.1"
   bin:
     mr-tick: dist/cli.cjs
-  checksum: 10c0/5a6e8f7400d9c0618012d97700562f85ef2e8e0a0aa3395342d9ea5d0f479cbe7bc7cc2c8eb8af2255b4281c6d12ca8bf65d4b21a0b7988c6083e937b19f7f34
+  checksum: 10c0/00a2cab429cdb6a91fbbd457b27d4c1b907affb08b1379e0e73d514eef67e31ea69bc1988711baf2e1ac06ea157c7bbc7b2101091ed5281d84a0ec139849e6c8
   languageName: node
   linkType: hard
 
