@@ -24,7 +24,7 @@ screenshots:
 downloadUrl: https://github.com/Gustavohps10/redmine-plugin/releases/download/v0.11.0/gustavohps10-redmine-0.11.0.tladdon
 sha256: b39b887c4e721fde6a77388129a194936a61209e50128bd83eda3a18f407e685
 size: 1312545
-requiredApiVersion: '>=0.12.0'
+requiredApiVersion: '>=0.13.0'
 releaseDate: '2026-10-24'
 changelog:
   - Release 0.1.1

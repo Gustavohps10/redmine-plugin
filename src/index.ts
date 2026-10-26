@@ -1,6 +1,5 @@
 import { AddonContext, IAddon } from '@mr-tick/sdk'
 
-import { AxiosHttpClient } from './client/AxiosHttpClient'
 import { RedmineClient } from './client/RedmineClient'
 import { RedmineDataSource } from './datasource'
 import {
@@ -74,7 +73,7 @@ export default class RedmineAddon implements IAddon {
             version = configuration.redmineVersion
           }
 
-          const client = new RedmineClient(new AxiosHttpClient(), {
+          const client = new RedmineClient(context.http, {
             apiUrl,
             apiKey,
             atomKey,
