@@ -1,5 +1,11 @@
 # @timelapse/redmine-plugin
 
+## 0.11.1
+
+### Patch Changes
+
+- 9e30347: Atualiza o SDK para 0.13.0 e adota FetchHttpClient nativo do contexto.
+
 ## 0.11.0
 
 ### Minor Changes
