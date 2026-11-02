@@ -108,50 +108,60 @@ export class RedmineMetadataProvider implements IMetadataProvider {
         this.client.getTrackers(),
       ])
 
-    const activities: MetadataItem[] = activitiesResult.isSuccess()
-      ? activitiesResult.success.time_entry_activities.map(
-          (activity: RedmineActivityAPI) => ({
-            id: String(activity.id),
-            name: activity.name,
-            icon: resolveActivityIcon(activity.name),
-            colors: defaultColors,
-          }),
-        )
-      : []
+    if (activitiesResult.isFailure()) {
+      return activitiesResult.forwardFailure()
+    }
 
-    const taskStatuses: MetadataItem[] = statusesResult.isSuccess()
-      ? statusesResult.success.issue_statuses.map(
-          (status: RedmineStatusAPI) => {
-            const uiConfig = this.getStatusUiConfig(status)
-            return {
-              id: String(status.id),
-              name: status.name,
-              icon: uiConfig.icon,
-              colors: uiConfig.colors,
-            }
-          },
-        )
-      : []
+    if (statusesResult.isFailure()) {
+      return statusesResult.forwardFailure()
+    }
 
-    const taskPriorities: MetadataItem[] = prioritiesResult.isSuccess()
-      ? prioritiesResult.success.issue_priorities.map(
-          (priority: RedminePriorityAPI) => ({
-            id: String(priority.id),
-            name: priority.name,
-            icon: 'AlertCircle',
-            colors: defaultColors,
-          }),
-        )
-      : []
+    if (prioritiesResult.isFailure()) {
+      return prioritiesResult.forwardFailure()
+    }
 
-    const trackStatuses: MetadataItem[] = trackersResult.isSuccess()
-      ? trackersResult.success.trackers.map((tracker: RedmineTrackerAPI) => ({
-          id: String(tracker.id),
-          name: tracker.name,
-          icon: 'Bookmark',
+    if (trackersResult.isFailure()) {
+      return trackersResult.forwardFailure()
+    }
+
+    const activities: MetadataItem[] =
+      activitiesResult.success.time_entry_activities.map(
+        (activity: RedmineActivityAPI) => ({
+          id: String(activity.id),
+          name: activity.name,
+          icon: resolveActivityIcon(activity.name),
           colors: defaultColors,
-        }))
-      : []
+        }),
+      )
+
+    const taskStatuses: MetadataItem[] =
+      statusesResult.success.issue_statuses.map((status: RedmineStatusAPI) => {
+        const uiConfig = this.getStatusUiConfig(status)
+        return {
+          id: String(status.id),
+          name: status.name,
+          icon: uiConfig.icon,
+          colors: uiConfig.colors,
+        }
+      })
+
+    const taskPriorities: MetadataItem[] =
+      prioritiesResult.success.issue_priorities.map(
+        (priority: RedminePriorityAPI) => ({
+          id: String(priority.id),
+          name: priority.name,
+          icon: 'AlertCircle',
+          colors: defaultColors,
+        }),
+      )
+
+    const trackStatuses: MetadataItem[] =
+      trackersResult.success.trackers.map((tracker: RedmineTrackerAPI) => ({
+        id: String(tracker.id),
+        name: tracker.name,
+        icon: 'Bookmark',
+        colors: defaultColors,
+      }))
 
     const participantRoles: MetadataItem[] = [
       {
