@@ -2,6 +2,8 @@
 
 Este documento consolida as principais decisões de engenharia, arquitetura de rede e estratégias de sincronização adotadas no conector oficial do Redmine para a plataforma **Mr. Tick**. O objetivo é servir como guia técnico definitivo para desenvolvedores que venham a manter ou evoluir este conector no futuro.
 
+Correção de contrato validada em 2026-11-03: respostas de tarefas com `description: null` representam ausência de descrição e são aceitas pelo validador. Ver [evidências de busca por ID e título](docs/2026-11-03-nullable-issue-description-validation.md).
+
 ---
 
 ## 1. Estratégia de Sincronização: Atom Feed + Batch REST (`issue_id`)

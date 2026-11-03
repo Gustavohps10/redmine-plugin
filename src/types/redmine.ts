@@ -43,7 +43,7 @@ export type RedmineIssueAPI = {
   author?: RedmineIdName
   assigned_to?: RedmineIdName
   subject: string
-  description?: string
+  description?: string | null
   start_date?: string | null
   due_date?: string | null
   done_ratio?: number

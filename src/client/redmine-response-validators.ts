@@ -105,6 +105,7 @@ export function isRedmineIssueAPI(
     (value.assigned_to === undefined || isRedmineIdName(value.assigned_to)) &&
     typeof value.subject === 'string' &&
     (value.description === undefined ||
+      value.description === null ||
       typeof value.description === 'string') &&
     (value.start_date === undefined ||
       value.start_date === null ||

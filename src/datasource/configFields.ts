@@ -44,12 +44,15 @@ export const configurationFieldGroups: AddonSettingsGroup[] = [
         description:
           'Selecione a versão do seu servidor Redmine ou mantenha detecção automática.',
         scope: 'configuration',
-        options: [
-          { label: 'Automático (Recomendado)', value: 'auto' },
-          { label: 'Redmine 3.4.x', value: '3.4' },
-          { label: 'Redmine 5.x', value: '5.0' },
-          { label: 'Redmine 6.x', value: '6.0' },
-        ],
+        source: {
+          kind: 'static',
+          options: [
+            { label: 'Automático (Recomendado)', value: 'auto' },
+            { label: 'Redmine 3.4.x', value: '3.4' },
+            { label: 'Redmine 5.x', value: '5.0' },
+            { label: 'Redmine 6.x', value: '6.0' },
+          ],
+        },
       },
     ],
   },
@@ -85,12 +88,15 @@ export const customFieldGroups: AddonSettingsGroup[] = [
         defaultValue: 'info',
         description:
           'Nível de log interno gerado durante a execução do plugin.',
-        options: [
-          { label: 'Informativo (Info)', value: 'info' },
-          { label: 'Depuração (Debug)', value: 'debug' },
-          { label: 'Avisos Apenas (Warning)', value: 'warning' },
-          { label: 'Erros Apenas (Error)', value: 'error' },
-        ],
+        source: {
+          kind: 'static',
+          options: [
+            { label: 'Informativo (Info)', value: 'info' },
+            { label: 'Depuração (Debug)', value: 'debug' },
+            { label: 'Avisos Apenas (Warning)', value: 'warning' },
+            { label: 'Erros Apenas (Error)', value: 'error' },
+          ],
+        },
       },
       {
         id: 'customFieldExportDirectory',
