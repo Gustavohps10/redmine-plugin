@@ -295,6 +295,7 @@ export class RedmineTaskProvider implements ITaskProvider {
     }
 
     const tasksMap = new Map<string, TaskDTO>()
+    const atomStubIds = new Set<string>()
 
     const assignedRes = await this.fetchAssignedTasks(
       memberId,
@@ -335,6 +336,7 @@ export class RedmineTaskProvider implements ITaskProvider {
 
           if (!tasksMap.has(task.id)) {
             tasksMap.set(task.id, task)
+            atomStubIds.add(task.id)
           }
         }
       }
@@ -347,9 +349,7 @@ export class RedmineTaskProvider implements ITaskProvider {
       idsToEnrich.push(...missingLoggedIds)
     }
 
-    const rawAtomIds = Array.from(tasksMap.values())
-      .filter((task: TaskDTO) => task.status.id === '0' || !task.description)
-      .map((task: TaskDTO) => task.id)
+    const rawAtomIds = Array.from(atomStubIds)
 
     idsToEnrich = Array.from(new Set([...idsToEnrich, ...rawAtomIds]))
 

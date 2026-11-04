@@ -92,7 +92,12 @@ const defaultColors = {
   text: '#1E40AF',
 }
 
+const METADATA_CACHE_TTL_MS = 5 * 60 * 1000
+
 export class RedmineMetadataProvider implements IMetadataProvider {
+  private cachedMetadata: { expiresAt: number; metadata: MetadataDTO } | null =
+    null
+
   constructor(private readonly client: RedmineClient) {}
 
   public async getMetadata(
@@ -100,6 +105,22 @@ export class RedmineMetadataProvider implements IMetadataProvider {
     checkpoint: { updatedAt: Date; id: string },
     batch: number,
   ): Promise<Either<AppError, MetadataDTO>> {
+    const cached = this.cachedMetadata
+    if (cached && cached.expiresAt > Date.now())
+      return Either.success(cached.metadata)
+
+    const result = await this.fetchMetadata()
+    if (result.isFailure()) return result
+
+    this.cachedMetadata = {
+      expiresAt: Date.now() + METADATA_CACHE_TTL_MS,
+      metadata: result.success,
+    }
+
+    return result
+  }
+
+  private async fetchMetadata(): Promise<Either<AppError, MetadataDTO>> {
     const [activitiesResult, statusesResult, prioritiesResult, trackersResult] =
       await Promise.all([
         this.client.getActivities(),
