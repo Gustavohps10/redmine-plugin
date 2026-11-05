@@ -1,5 +1,15 @@
 # @timelapse/redmine-plugin
 
+## 0.11.3
+
+### Patch Changes
+
+- 4e62776: Aceita `description: null` nas respostas de tarefas do Redmine, representando ausência de descrição. Corrige `HTTP_RESPONSE_INVALID` na busca por ID e em páginas de pesquisa que contenham essas tarefas, preservando a rejeição de tipos inválidos.
+
+  Atualiza os seletores de configuração para `source.kind: static` e mantém o SDK via portal local durante o desenvolvimento, sem exigir sua publicação.
+
+- 9b8b2a1: Reduz requisicoes redundantes ao Redmine: coalescencia de GETs identicos em voo (InFlightRequests), cache de metadados e enriquecimento de tarefas restrito aos stubs do feed Atom.
+
 ## 0.11.2
 
 ### Patch Changes
