@@ -1,5 +1,11 @@
 # @timelapse/redmine-plugin
 
+## 0.11.2
+
+### Patch Changes
+
+- aa824d9: Propaga falhas ao buscar atividades, status, prioridades ou trackers em `RedmineMetadataProvider` em vez de retornar listas vazias silenciosamente.
+
 ## 0.11.1
 
 ### Patch Changes
