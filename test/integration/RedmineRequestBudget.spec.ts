@@ -121,7 +121,10 @@ describe.each(instances)(
 
       const second = await provider.pull(
         MEMBER_ID,
-        { updatedAt: new Date(Date.now() + 60_000), id: '' },
+        {
+          updatedAt: new Date(Date.now() + 30 * 24 * 3600 * 1000),
+          id: '',
+        },
         50,
       )
 
