@@ -705,7 +705,7 @@ __metadata:
   resolution: "@mr-tick/redmine-plugin@workspace:."
   dependencies:
     "@changesets/cli": "npm:^2.29.6"
-    "@mr-tick/sdk": "portal:../metric/src/apps/sdk"
+    "@mr-tick/sdk": "npm:^0.14.0"
     "@types/node": "npm:^24.3.0"
     rimraf: "npm:^6.0.1"
     tsup: "npm:^8.5.0"
@@ -714,17 +714,18 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@mr-tick/sdk@portal:../metric/src/apps/sdk::locator=%40mr-tick%2Fredmine-plugin%40workspace%3A.":
-  version: 0.0.0-use.local
-  resolution: "@mr-tick/sdk@portal:../metric/src/apps/sdk::locator=%40mr-tick%2Fredmine-plugin%40workspace%3A."
+"@mr-tick/sdk@npm:^0.14.0":
+  version: 0.14.0
+  resolution: "@mr-tick/sdk@npm:0.14.0"
   dependencies:
     highlight.js: "npm:^11.11.1"
     textile-js: "npm:^2.1.1"
     turndown: "npm:^7.2.1"
   bin:
-    mr-tick: ./dist/cli.cjs
+    mr-tick: dist/cli.cjs
+  checksum: 10c0/0964aefdfb7e398663a47792b428b2ff960b223603191f0773fa45c581cce7ab9c113182e574756459aa7cbf496bc26ba47a7d16e5e473710d1cb130909ab2e4
   languageName: node
-  linkType: soft
+  linkType: hard
 
 "@napi-rs/lzma-linux-x64-gnu@npm:1.5.1":
   version: 1.5.1
