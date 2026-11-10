@@ -11,8 +11,16 @@ describe('T01 / M01 / M18: Isolamento HTTP por conexão entre múltiplos provedo
   let serverB: Server
   let urlA = ''
   let urlB = ''
-  const requestsA: Array<{ method: string; url: string; headers: Record<string, string | string[] | undefined> }> = []
-  const requestsB: Array<{ method: string; url: string; headers: Record<string, string | string[] | undefined> }> = []
+  const requestsA: Array<{
+    method: string
+    url: string
+    headers: Record<string, string | string[] | undefined>
+  }> = []
+  const requestsB: Array<{
+    method: string
+    url: string
+    headers: Record<string, string | string[] | undefined>
+  }> = []
 
   let shouldSimulateAtomLoginRedirect = false
 
@@ -38,7 +46,11 @@ describe('T01 / M01 / M18: Isolamento HTTP por conexão entre múltiplos provedo
 
       if (shouldSimulateAtomLoginRedirect) {
         res.setHeader('Content-Type', 'text/html')
-        res.writeHead(200).end('<!DOCTYPE html><html><body class="action-login">Login Required</body></html>')
+        res
+          .writeHead(200)
+          .end(
+            '<!DOCTYPE html><html><body class="action-login">Login Required</body></html>',
+          )
         return
       }
 
@@ -104,12 +116,21 @@ describe('T01 / M01 / M18: Isolamento HTTP por conexão entre múltiplos provedo
       )
     })
 
-    await new Promise<void>((resolve) => serverA.listen(0, '127.0.0.1', resolve))
-    await new Promise<void>((resolve) => serverB.listen(0, '127.0.0.1', resolve))
+    await new Promise<void>((resolve) =>
+      serverA.listen(0, '127.0.0.1', resolve),
+    )
+    await new Promise<void>((resolve) =>
+      serverB.listen(0, '127.0.0.1', resolve),
+    )
 
     const addrA = serverA.address()
     const addrB = serverB.address()
-    if (!addrA || typeof addrA === 'string' || !addrB || typeof addrB === 'string') {
+    if (
+      !addrA ||
+      typeof addrA === 'string' ||
+      !addrB ||
+      typeof addrB === 'string'
+    ) {
       throw new Error('Falha ao inicializar servidores loopback de teste')
     }
     urlA = `http://127.0.0.1:${addrA.port}/subpathA`
@@ -183,7 +204,9 @@ describe('T01 / M01 / M18: Isolamento HTTP por conexão entre múltiplos provedo
     expect(result.isFailure()).toBe(true)
     if (result.isFailure()) {
       expect(result.failure.statusCode).toBe(401)
-      expect(result.failure.messageKey).toContain('Acesso não autorizado ao feed Atom do Redmine')
+      expect(result.failure.messageKey).toContain(
+        'Acesso não autorizado ao feed Atom do Redmine',
+      )
     }
   })
 })

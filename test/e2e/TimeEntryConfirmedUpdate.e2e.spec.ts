@@ -14,19 +14,31 @@ describe('E2E do conector: confirmação de PUT separada da leitura canônica', 
   let stored: RedmineTimeEntryAPI
   const methods: string[] = []
   const entry: TimeEntryDTO = {
-    id: '501', task: { id: '101' }, activity: { id: '9' }, user: { id: '1' },
-    timeSpent: 1.3333, comments: 'saved', startDate: new Date(2026, 8, 24, 8),
-    createdAt: new Date('2026-09-24T11:00:00Z'), updatedAt: new Date('2026-09-24T11:00:00Z'),
+    id: '501',
+    task: { id: '101' },
+    activity: { id: '9' },
+    user: { id: '1' },
+    timeSpent: 1.3333,
+    comments: 'saved',
+    startDate: new Date(2026, 8, 24, 8),
+    createdAt: new Date('2026-09-24T11:00:00Z'),
+    updatedAt: new Date('2026-09-24T11:00:00Z'),
   }
 
   beforeEach(async () => {
     methods.length = 0
     let reads = 0
     stored = {
-      id: 501, project: { id: 1, name: 'Project' }, issue: { id: 101 },
-      user: { id: 1, name: 'User' }, activity: { id: 9, name: 'Development' },
-      hours: 1, comments: 'before', spent_on: '2026-09-24',
-      created_on: '2026-09-24T11:00:00Z', updated_on: '2026-09-24T11:00:00Z',
+      id: 501,
+      project: { id: 1, name: 'Project' },
+      issue: { id: 101 },
+      user: { id: 1, name: 'User' },
+      activity: { id: 9, name: 'Development' },
+      hours: 1,
+      comments: 'before',
+      spent_on: '2026-09-24',
+      created_on: '2026-09-24T11:00:00Z',
+      updated_on: '2026-09-24T11:00:00Z',
     }
     server = createServer((request, response) => {
       if (request.url !== '/time_entries/501.json') {
@@ -37,7 +49,12 @@ describe('E2E do conector: confirmação de PUT separada da leitura canônica', 
       if (request.method === 'PUT') {
         request.resume()
         request.on('end', () => {
-          stored = { ...stored, hours: 1.33, comments: 'saved', updated_on: '2026-09-24T11:00:05Z' }
+          stored = {
+            ...stored,
+            hours: 1.33,
+            comments: 'saved',
+            updated_on: '2026-09-24T11:00:05Z',
+          }
           response.writeHead(204).end()
         })
         return
@@ -49,7 +66,9 @@ describe('E2E do conector: confirmação de PUT separada da leitura canônica', 
       reads++
       response.setHeader('Content-Type', 'application/json')
       if (reads === 1) {
-        response.writeHead(503).end(JSON.stringify({ errors: ['CANONICAL_READ_UNAVAILABLE'] }))
+        response
+          .writeHead(503)
+          .end(JSON.stringify({ errors: ['CANONICAL_READ_UNAVAILABLE'] }))
         return
       }
       response.end(JSON.stringify({ time_entry: stored }))
@@ -58,9 +77,12 @@ describe('E2E do conector: confirmação de PUT separada da leitura canônica', 
     const address = server.address()
     expect(address).not.toBeNull()
     if (!address || typeof address === 'string') return
-    provider = new RedmineTimeEntryProvider(new RedmineClient(new AxiosHttpClient(), {
-      apiUrl: 'http://127.0.0.1:' + address.port, apiKey: 'local-test-only',
-    }))
+    provider = new RedmineTimeEntryProvider(
+      new RedmineClient(new AxiosHttpClient(), {
+        apiUrl: 'http://127.0.0.1:' + address.port,
+        apiKey: 'local-test-only',
+      }),
+    )
   })
 
   afterEach(async () => {
@@ -79,14 +101,19 @@ describe('E2E do conector: confirmação de PUT separada da leitura canônica', 
     expect(firstRead.isFailure()).toBe(true)
     if (firstRead.isSuccess()) return
     expect(firstRead.failure.statusCode).toBe(503)
-    expect(firstRead.failure.messageKey).toBe('Request failed with status code 503')
+    expect(firstRead.failure.messageKey).toBe(
+      'Request failed with status code 503',
+    )
 
     const recovery = await provider.findById(write.success.id)
     expect(recovery.isSuccess()).toBe(true)
     if (recovery.isFailure()) return
     expect(recovery.success).toMatchObject({
-      id: '501', timeSpent: 1.33, comments: 'saved',
-      startDate: new Date(2026, 8, 24, 12), updatedAt: new Date(stored.updated_on),
+      id: '501',
+      timeSpent: 1.33,
+      comments: 'saved',
+      startDate: new Date(2026, 8, 24, 12),
+      updatedAt: new Date(stored.updated_on),
     })
     expect(methods).toEqual(['PUT', 'GET', 'GET'])
   })

@@ -1,7 +1,7 @@
-import { TimeEntryDTO, TimeEntryPullCheckpointDTO } from '@mr-tick/sdk'
 import { createServer, Server } from 'node:http'
 
-import { beforeEach, afterEach, describe, expect, it } from 'vitest'
+import { TimeEntryDTO, TimeEntryPullCheckpointDTO } from '@mr-tick/sdk'
+import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 
 import { RedmineClient } from '../../src/client/RedmineClient'
 import { RedmineTimeEntryProvider } from '../../src/datasource/versions/3.4/RedmineTimeEntryProvider'
@@ -46,18 +46,26 @@ describe('E2E do conector: HTTP real e paginação Redmine', () => {
       requests.push(offset)
       response.setHeader('Content-Type', 'application/json')
       if (offset === failOffset) {
-        response.writeHead(503).end(JSON.stringify({ errors: ['PAGE_UNAVAILABLE'] }))
+        response
+          .writeHead(503)
+          .end(JSON.stringify({ errors: ['PAGE_UNAVAILABLE'] }))
         return
       }
-      const page = offset === 100 && corruption === 'duplicate'
-        ? entries.slice(0, limit)
-        : entries.slice(offset, offset + limit)
-      response.end(JSON.stringify({
-        time_entries: offset === 100 && corruption === 'empty' ? [] : page,
-        total_count: offset === 100 && corruption === 'total' ? entries.length + 1 : entries.length,
-        offset,
-        limit,
-      }))
+      const page =
+        offset === 100 && corruption === 'duplicate'
+          ? entries.slice(0, limit)
+          : entries.slice(offset, offset + limit)
+      response.end(
+        JSON.stringify({
+          time_entries: offset === 100 && corruption === 'empty' ? [] : page,
+          total_count:
+            offset === 100 && corruption === 'total'
+              ? entries.length + 1
+              : entries.length,
+          offset,
+          limit,
+        }),
+      )
     })
     await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve))
     const address = server.address()
@@ -89,7 +97,10 @@ describe('E2E do conector: HTTP real e paginação Redmine', () => {
     return { items, checkpoint: next }
   }
   it('recebe todos os 351 registros apesar da ordem HTTP e dos timestamps empatados', async () => {
-    let checkpoint: TimeEntryPullCheckpointDTO = { updatedAt: new Date(0), id: '' }
+    let checkpoint: TimeEntryPullCheckpointDTO = {
+      updatedAt: new Date(0),
+      id: '',
+    }
     const ids: string[] = []
     for (let batchNumber = 0; batchNumber < 20; batchNumber++) {
       const result = await provider.pull('1', checkpoint, 30)
@@ -97,13 +108,19 @@ describe('E2E do conector: HTTP real e paginação Redmine', () => {
       if (result.isFailure()) return
       const last = result.success.items.at(-1)
       if (!last) break
-      ids.push(...result.success.items.flatMap((entry: TimeEntryDTO) => entry.id ? [entry.id] : []))
+      ids.push(
+        ...result.success.items.flatMap((entry: TimeEntryDTO) =>
+          entry.id ? [entry.id] : [],
+        ),
+      )
       if (!last.id) return
       checkpoint = result.success.checkpoint
     }
     expect(ids).toHaveLength(351)
     expect(new Set(ids).size).toBe(351)
-    expect(new Set(ids)).toEqual(new Set(entries.map((entry) => String(entry.id))))
+    expect(new Set(ids)).toEqual(
+      new Set(entries.map((entry) => String(entry.id))),
+    )
     expect(requests).toContain(300)
   })
 
@@ -112,14 +129,22 @@ describe('E2E do conector: HTTP real e paginação Redmine', () => {
     const changed = entries.find((entry) => entry.id === 5)
     expect(changed).toBeDefined()
     if (!changed) return
-    changed.updated_on = new Date(before.checkpoint.updatedAt.getTime() + 1000).toISOString()
+    changed.updated_on = new Date(
+      before.checkpoint.updatedAt.getTime() + 1000,
+    ).toISOString()
     changed.comments = 'EXTERNAL_UPDATE'
     const result = await pullAll(before.checkpoint)
-    expect(result.items.find((entry) => entry.id === '5')?.comments).toBe('EXTERNAL_UPDATE')
+    expect(result.items.find((entry) => entry.id === '5')?.comments).toBe(
+      'EXTERNAL_UPDATE',
+    )
     expect(result.items).toHaveLength(351)
   })
   it('findByMemberId retorna snapshot completo maior que 100 registros', async () => {
-    const result = await provider.findByMemberId('1', new Date('2026-01-01'), new Date('2027-01-01'))
+    const result = await provider.findByMemberId(
+      '1',
+      new Date('2026-01-01'),
+      new Date('2027-01-01'),
+    )
     expect(result.isSuccess()).toBe(true)
     if (result.isFailure()) return
     expect(result.success.items).toHaveLength(351)
@@ -139,7 +164,8 @@ describe('E2E do conector: HTTP real e paginação Redmine', () => {
     provider = new RedmineTimeEntryProvider(client)
     const result = await pullAll(before.checkpoint)
     expect(result.items.find((entry) => entry.id === '351')).toMatchObject({
-      comments: 'CHANGED_WITH_EQUAL_TIMESTAMP', timeSpent: 2,
+      comments: 'CHANGED_WITH_EQUAL_TIMESTAMP',
+      timeSpent: 2,
       updatedAt: new Date(originalTimestamp),
     })
     expect(result.checkpoint.cursor).not.toBe(before.checkpoint.cursor)
@@ -152,7 +178,11 @@ describe('E2E do conector: HTTP real e paginação Redmine', () => {
   })
 
   it('mudança entre páginas reinicia o snapshot sem saltar o registro alterado', async () => {
-    const first = await provider.pull('1', { updatedAt: new Date(0), id: '' }, 30)
+    const first = await provider.pull(
+      '1',
+      { updatedAt: new Date(0), id: '' },
+      30,
+    )
     if (first.isFailure()) return
     expect(first.success.items).toHaveLength(30)
     const changed = entries.find((entry) => entry.id === 1)
@@ -162,57 +192,86 @@ describe('E2E do conector: HTTP real e paginação Redmine', () => {
     expect(restarted.isSuccess()).toBe(true)
     if (restarted.isFailure()) return
     expect(restarted.success.snapshotId).not.toBe(first.success.snapshotId)
-    expect(restarted.success.items.at(0)).toMatchObject({ id: '1', comments: changed.comments })
+    expect(restarted.success.items.at(0)).toMatchObject({
+      id: '1',
+      comments: changed.comments,
+    })
     const rest = await pullAll(restarted.success.checkpoint)
     expect([...restarted.success.items, ...rest.items]).toHaveLength(351)
   })
   it('falha na segunda página impede confirmação de snapshot parcial', async () => {
     failOffset = 100
-    const result = await provider.findByMemberId('1', new Date('2026-01-01'), new Date('2027-01-01'))
+    const result = await provider.findByMemberId(
+      '1',
+      new Date('2026-01-01'),
+      new Date('2027-01-01'),
+    )
     expect(result.isFailure()).toBe(true)
     expect(requests).toContain(100)
   })
 
-  it.each(['duplicate', 'total', 'empty'])('rejeita snapshot incoerente (%s) sem avançar o cursor', async (scenario) => {
-    if (scenario !== 'duplicate' && scenario !== 'total' && scenario !== 'empty') return
-    corruption = scenario
-    const checkpoint = { updatedAt: new Date(0), id: '' }
-    const failed = await provider.pull('1', checkpoint, 30)
-    expect(failed.isFailure()).toBe(true)
-    expect(checkpoint).toEqual({ updatedAt: new Date(0), id: '' })
-    corruption = undefined
-    const recovered = await provider.pull('1', checkpoint, 30)
-    expect(recovered.isSuccess()).toBe(true)
-    if (recovered.isFailure()) return
-    expect(recovered.success.items).toHaveLength(30)
-    expect(recovered.success.items.at(0)?.id).toBe('1')
-  })
+  it.each(['duplicate', 'total', 'empty'])(
+    'rejeita snapshot incoerente (%s) sem avançar o cursor',
+    async (scenario) => {
+      if (
+        scenario !== 'duplicate' &&
+        scenario !== 'total' &&
+        scenario !== 'empty'
+      )
+        return
+      corruption = scenario
+      const checkpoint = { updatedAt: new Date(0), id: '' }
+      const failed = await provider.pull('1', checkpoint, 30)
+      expect(failed.isFailure()).toBe(true)
+      expect(checkpoint).toEqual({ updatedAt: new Date(0), id: '' })
+      corruption = undefined
+      const recovered = await provider.pull('1', checkpoint, 30)
+      expect(recovered.isSuccess()).toBe(true)
+      if (recovered.isFailure()) return
+      expect(recovered.success.items).toHaveLength(30)
+      expect(recovered.success.items.at(0)?.id).toBe('1')
+    },
+  )
 
-  it.each(['duplicate', 'total', 'empty'])('correlação rejeita snapshot incoerente (%s) antes de concluir ausência ou unicidade', async (scenario) => {
-    if (scenario !== 'duplicate' && scenario !== 'total' && scenario !== 'empty') return
-    corruption = scenario
-    const visible = entries.find((entry) => entry.id === 351)
-    const hidden = entries.find((entry) => entry.id === 1)
-    expect(visible).toBeDefined()
-    expect(hidden).toBeDefined()
-    if (!visible || !hidden) return
-    visible.comments = 'saved [mc:recovery-id]'
-    hidden.comments = 'other [mc:recovery-id]'
-    const input = {
-      task: { id: '101' }, activity: { id: '9' }, user: { id: '1' },
-      timeSpent: 1, startDate: new Date(visible.spent_on + 'T12:00:00Z'),
-      createdAt: new Date(visible.created_on), updatedAt: new Date(visible.updated_on),
-    }
-    const incomplete = await provider.findByCorrelation('recovery-id', input)
-    expect(incomplete.isFailure()).toBe(true)
-    if (incomplete.isSuccess()) return
-    expect(incomplete.failure.statusCode).toBe(503)
-    const absence = await provider.findByCorrelation('absent-id', input)
-    expect(absence.isFailure()).toBe(true)
-    corruption = undefined
-    const complete = await provider.findByCorrelation('recovery-id', input)
-    expect(complete.isFailure()).toBe(true)
-    if (complete.isSuccess()) return
-    expect(complete.failure.messageKey).toBe('DUPLICATE_TIME_ENTRY_CORRELATION')
-  })
+  it.each(['duplicate', 'total', 'empty'])(
+    'correlação rejeita snapshot incoerente (%s) antes de concluir ausência ou unicidade',
+    async (scenario) => {
+      if (
+        scenario !== 'duplicate' &&
+        scenario !== 'total' &&
+        scenario !== 'empty'
+      )
+        return
+      corruption = scenario
+      const visible = entries.find((entry) => entry.id === 351)
+      const hidden = entries.find((entry) => entry.id === 1)
+      expect(visible).toBeDefined()
+      expect(hidden).toBeDefined()
+      if (!visible || !hidden) return
+      visible.comments = 'saved [mc:recovery-id]'
+      hidden.comments = 'other [mc:recovery-id]'
+      const input = {
+        task: { id: '101' },
+        activity: { id: '9' },
+        user: { id: '1' },
+        timeSpent: 1,
+        startDate: new Date(visible.spent_on + 'T12:00:00Z'),
+        createdAt: new Date(visible.created_on),
+        updatedAt: new Date(visible.updated_on),
+      }
+      const incomplete = await provider.findByCorrelation('recovery-id', input)
+      expect(incomplete.isFailure()).toBe(true)
+      if (incomplete.isSuccess()) return
+      expect(incomplete.failure.statusCode).toBe(503)
+      const absence = await provider.findByCorrelation('absent-id', input)
+      expect(absence.isFailure()).toBe(true)
+      corruption = undefined
+      const complete = await provider.findByCorrelation('recovery-id', input)
+      expect(complete.isFailure()).toBe(true)
+      if (complete.isSuccess()) return
+      expect(complete.failure.messageKey).toBe(
+        'DUPLICATE_TIME_ENTRY_CORRELATION',
+      )
+    },
+  )
 })

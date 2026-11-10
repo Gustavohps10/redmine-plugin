@@ -1,5 +1,6 @@
 import { AddonContext, IAddon } from '@mr-tick/sdk'
 
+import { RedmineAnalyticsSource } from './analytics/RedmineAnalyticsSource'
 import { RedmineClient } from './client/RedmineClient'
 import { RedmineDataSource } from './datasource'
 import {
@@ -94,6 +95,20 @@ export default class RedmineAddon implements IAddon {
       return
     }
 
+    const analytics = context.contributions.analytics.register(
+      new RedmineAnalyticsSource(),
+    )
+
+    if (analytics.isFailure()) {
+      context.contributions.connections.unregisterProfiles()
+      context.contributions.connections.unregisterAuthenticator(
+        'redmine-instance',
+      )
+      void context.host.notifications.error(analytics.failure.messageKey)
+      this.activeContext = null
+      return
+    }
+
     context.contributions.dataSources.register(new RedmineDataSource())
 
     context.contributions.menus.sidebar.register({
@@ -166,6 +181,7 @@ export default class RedmineAddon implements IAddon {
   deactivate(): void {
     if (!this.activeContext) return
 
+    this.activeContext.contributions.analytics.unregister()
     this.activeContext.contributions.connections.unregisterProfiles()
 
     this.activeContext.contributions.connections.unregisterAuthenticator(

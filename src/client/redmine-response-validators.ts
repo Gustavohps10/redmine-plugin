@@ -4,12 +4,25 @@ import type {
   RedmineActivitiesResponse,
   RedmineActivityAPI,
   RedmineCustomField,
+  RedmineGroupAPI,
+  RedmineGroupsResponse,
   RedmineIdName,
   RedmineIssueAPI,
+  RedmineIssueCategoriesResponse,
+  RedmineIssueCategoryAPI,
+  RedmineIssueRelationAPI,
+  RedmineIssueRelationsResponse,
   RedmineIssueResponse,
   RedmineIssuesResponse,
+  RedmineMembershipAPI,
+  RedmineMembershipRoleAPI,
+  RedmineMembershipsResponse,
   RedminePrioritiesResponse,
   RedminePriorityAPI,
+  RedmineProjectAPI,
+  RedmineProjectsResponse,
+  RedmineQueriesResponse,
+  RedmineQueryAPI,
   RedmineStatusAPI,
   RedmineStatusesResponse,
   RedmineTimeEntriesResponse,
@@ -19,6 +32,9 @@ import type {
   RedmineTrackersResponse,
   RedmineUserAPI,
   RedmineUserResponse,
+  RedmineUsersResponse,
+  RedmineVersionAPI,
+  RedmineVersionsResponse,
 } from '../types/redmine'
 
 function isObject(
@@ -294,4 +310,179 @@ export function isRedmineTrackersResponse(
 
 export function isTextResponse(value: JsonValue): value is string {
   return typeof value === 'string'
+}
+
+export function isRedmineProjectAPI(
+  value: JsonValue | undefined,
+): value is RedmineProjectAPI {
+  if (!isObject(value)) return false
+  return (
+    typeof value.id === 'number' &&
+    Number.isFinite(value.id) &&
+    typeof value.name === 'string' &&
+    typeof value.identifier === 'string'
+  )
+}
+
+export function isRedmineProjectsResponse(
+  value: JsonValue | undefined,
+): value is RedmineProjectsResponse {
+  if (!isObject(value)) return false
+  return (
+    Array.isArray(value.projects) &&
+    value.projects.every((item) => isRedmineProjectAPI(item))
+  )
+}
+
+export function isRedmineUsersResponse(
+  value: JsonValue | undefined,
+): value is RedmineUsersResponse {
+  if (!isObject(value)) return false
+  return (
+    Array.isArray(value.users) &&
+    value.users.every((item) => isRedmineUserAPI(item))
+  )
+}
+
+export function isRedmineVersionAPI(
+  value: JsonValue | undefined,
+): value is RedmineVersionAPI {
+  if (!isObject(value)) return false
+  return (
+    typeof value.id === 'number' &&
+    Number.isFinite(value.id) &&
+    typeof value.name === 'string' &&
+    isRedmineIdName(value.project)
+  )
+}
+
+export function isRedmineVersionsResponse(
+  value: JsonValue | undefined,
+): value is RedmineVersionsResponse {
+  if (!isObject(value)) return false
+  return (
+    Array.isArray(value.versions) &&
+    value.versions.every((item) => isRedmineVersionAPI(item))
+  )
+}
+
+export function isRedmineMembershipRoleAPI(
+  value: JsonValue | undefined,
+): value is RedmineMembershipRoleAPI {
+  if (!isObject(value)) return false
+  return (
+    typeof value.id === 'number' &&
+    Number.isFinite(value.id) &&
+    typeof value.name === 'string'
+  )
+}
+
+export function isRedmineMembershipAPI(
+  value: JsonValue | undefined,
+): value is RedmineMembershipAPI {
+  if (!isObject(value)) return false
+  return (
+    typeof value.id === 'number' &&
+    Number.isFinite(value.id) &&
+    isRedmineIdName(value.project) &&
+    Array.isArray(value.roles) &&
+    value.roles.every((r) => isRedmineMembershipRoleAPI(r))
+  )
+}
+
+export function isRedmineMembershipsResponse(
+  value: JsonValue | undefined,
+): value is RedmineMembershipsResponse {
+  if (!isObject(value)) return false
+  return (
+    Array.isArray(value.memberships) &&
+    value.memberships.every((item) => isRedmineMembershipAPI(item))
+  )
+}
+
+export function isRedmineIssueRelationAPI(
+  value: JsonValue | undefined,
+): value is RedmineIssueRelationAPI {
+  if (!isObject(value)) return false
+  return (
+    typeof value.id === 'number' &&
+    Number.isFinite(value.id) &&
+    typeof value.issue_id === 'number' &&
+    typeof value.issue_to_id === 'number' &&
+    typeof value.relation_type === 'string'
+  )
+}
+
+export function isRedmineIssueRelationsResponse(
+  value: JsonValue | undefined,
+): value is RedmineIssueRelationsResponse {
+  if (!isObject(value)) return false
+  return (
+    Array.isArray(value.relations) &&
+    value.relations.every((item) => isRedmineIssueRelationAPI(item))
+  )
+}
+
+export function isRedmineIssueCategoryAPI(
+  value: JsonValue | undefined,
+): value is RedmineIssueCategoryAPI {
+  if (!isObject(value)) return false
+  return (
+    typeof value.id === 'number' &&
+    Number.isFinite(value.id) &&
+    typeof value.name === 'string'
+  )
+}
+
+export function isRedmineIssueCategoriesResponse(
+  value: JsonValue | undefined,
+): value is RedmineIssueCategoriesResponse {
+  if (!isObject(value)) return false
+  return (
+    Array.isArray(value.issue_categories) &&
+    value.issue_categories.every((item) => isRedmineIssueCategoryAPI(item))
+  )
+}
+
+export function isRedmineGroupAPI(
+  value: JsonValue | undefined,
+): value is RedmineGroupAPI {
+  if (!isObject(value)) return false
+  return (
+    typeof value.id === 'number' &&
+    Number.isFinite(value.id) &&
+    typeof value.name === 'string'
+  )
+}
+
+export function isRedmineGroupsResponse(
+  value: JsonValue | undefined,
+): value is RedmineGroupsResponse {
+  if (!isObject(value)) return false
+  return (
+    Array.isArray(value.groups) &&
+    value.groups.every((item) => isRedmineGroupAPI(item))
+  )
+}
+
+export function isRedmineQueryAPI(
+  value: JsonValue | undefined,
+): value is RedmineQueryAPI {
+  if (!isObject(value)) return false
+  return (
+    typeof value.id === 'number' &&
+    Number.isFinite(value.id) &&
+    typeof value.name === 'string' &&
+    typeof value.is_public === 'boolean'
+  )
+}
+
+export function isRedmineQueriesResponse(
+  value: JsonValue | undefined,
+): value is RedmineQueriesResponse {
+  if (!isObject(value)) return false
+  return (
+    Array.isArray(value.queries) &&
+    value.queries.every((item) => isRedmineQueryAPI(item))
+  )
 }

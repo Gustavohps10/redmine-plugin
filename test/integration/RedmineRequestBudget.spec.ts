@@ -62,50 +62,44 @@ describe.each(instances)(
 
       expect(results.every((result) => result.isSuccess())).toBe(true)
       expect(again.isSuccess()).toBe(true)
-      expect(
-        Object.values(hits).reduce((sum, value) => sum + value, 0),
-      ).toBe(4)
+      expect(Object.values(hits).reduce((sum, value) => sum + value, 0)).toBe(4)
     })
 
-    it(
-      'apontamentos: o scan custa uma passada pelo snapshot e entrega os mesmos registros do snapshot completo',
-      async () => {
-        const client = createClient()
-        const provider = new RedmineTimeEntryProvider(client)
-        const to = new Date()
-        const from = new Date(to)
-        from.setMonth(to.getMonth() - 2)
-        const reference = await new RedmineTimeEntryProvider(
-          createClient(),
-        ).findByMemberId(MEMBER_ID, from, to)
-        expect(reference.isSuccess()).toBe(true)
-        if (reference.isFailure()) return
-        hits = {}
+    it('apontamentos: o scan custa uma passada pelo snapshot e entrega os mesmos registros do snapshot completo', async () => {
+      const client = createClient()
+      const provider = new RedmineTimeEntryProvider(client)
+      const to = new Date()
+      const from = new Date(to)
+      from.setMonth(to.getMonth() - 2)
+      const reference = await new RedmineTimeEntryProvider(
+        createClient(),
+      ).findByMemberId(MEMBER_ID, from, to)
+      expect(reference.isSuccess()).toBe(true)
+      if (reference.isFailure()) return
+      hits = {}
 
-        let checkpoint: TimeEntryPullCheckpointDTO = EPOCH
-        const items: TimeEntryDTO[] = []
-        for (let round = 0; round < 50; round++) {
-          const page = await provider.pull(MEMBER_ID, checkpoint, 5)
-          expect(page.isSuccess()).toBe(true)
-          if (page.isFailure()) return
-          items.push(...page.success.items)
-          checkpoint = page.success.checkpoint
-          if (!page.success.hasMore) break
-        }
+      let checkpoint: TimeEntryPullCheckpointDTO = EPOCH
+      const items: TimeEntryDTO[] = []
+      for (let round = 0; round < 50; round++) {
+        const page = await provider.pull(MEMBER_ID, checkpoint, 5)
+        expect(page.isSuccess()).toBe(true)
+        if (page.isFailure()) return
+        items.push(...page.success.items)
+        checkpoint = page.success.checkpoint
+        if (!page.success.hasMore) break
+      }
 
-        const pagesPerSnapshot = Math.max(
-          1,
-          Math.ceil(reference.success.items.length / 100),
-        )
-        expect(count('/time_entries.json')).toBeGreaterThanOrEqual(
-          pagesPerSnapshot,
-        )
-        const received = new Set(items.map((entry) => entry.id))
-        for (const expected of reference.success.items)
-          expect(received.has(expected.id)).toBe(true)
-      },
-      15000,
-    )
+      const pagesPerSnapshot = Math.max(
+        1,
+        Math.ceil(reference.success.items.length / 100),
+      )
+      expect(count('/time_entries.json')).toBeGreaterThanOrEqual(
+        pagesPerSnapshot,
+      )
+      const received = new Set(items.map((entry) => entry.id))
+      for (const expected of reference.success.items)
+        expect(received.has(expected.id)).toBe(true)
+    }, 15000)
 
     it('tarefas: sincronização repetida sem novidades não repete usuário nem enriquecimento', async () => {
       const provider = new RedmineTaskProvider(createClient())
@@ -132,7 +126,9 @@ describe.each(instances)(
       if (second.isFailure()) return
       expect(second.success).toEqual([])
       expect(count('/users/1.json')).toBe(1)
-      expect(count('/activity.atom')).toBe((afterFirst['/activity.atom'] ?? 0) + 1)
+      expect(count('/activity.atom')).toBe(
+        (afterFirst['/activity.atom'] ?? 0) + 1,
+      )
       expect(count('/issues.json') - (afterFirst['/issues.json'] ?? 0)).toBe(1)
     })
 

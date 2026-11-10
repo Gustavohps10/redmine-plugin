@@ -89,9 +89,7 @@ describe('RedmineMetadataProvider', () => {
         {
           id: 102,
           subject: 'Segunda issue com campo repetido',
-          custom_fields: [
-            { id: 1, name: 'Tipo de Demanda', value: 'Bug' },
-          ],
+          custom_fields: [{ id: 1, name: 'Tipo de Demanda', value: 'Bug' }],
         },
       ],
       total_count: 2,

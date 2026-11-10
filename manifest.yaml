@@ -4,6 +4,7 @@ version: 0.11.3
 capabilities:
   - auth
   - dataSource
+  - analytics
   - theme
 author: Gustavo Henrique
 shortDescription: Redmine data source for projects and issues

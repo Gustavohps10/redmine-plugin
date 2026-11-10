@@ -2,14 +2,16 @@ import { describe, expect, it } from 'vitest'
 
 import { RedmineClient } from '../src/client/RedmineClient'
 import issuesFixture from './fixtures/issues.json'
-import timeEntriesFixture from './fixtures/time_entries.json'
 import userFixture from './fixtures/user.json'
 import { MockHttpClient } from './helpers/MockHttpClient'
 
 describe('RedmineClient', () => {
   it('deve falhar com ValidationError se apiUrl não for informada', async () => {
     const httpClient = new MockHttpClient()
-    const client = new RedmineClient(httpClient, { apiUrl: '', apiKey: 'token-123' })
+    const client = new RedmineClient(httpClient, {
+      apiUrl: '',
+      apiKey: 'token-123',
+    })
 
     const result = await client.getCurrentUser()
 
@@ -21,7 +23,10 @@ describe('RedmineClient', () => {
 
   it('deve falhar com ValidationError se apiKey não for informada', async () => {
     const httpClient = new MockHttpClient()
-    const client = new RedmineClient(httpClient, { apiUrl: 'https://redmine.test', apiKey: '' })
+    const client = new RedmineClient(httpClient, {
+      apiUrl: 'https://redmine.test',
+      apiKey: '',
+    })
 
     const result = await client.getCurrentUser()
 
@@ -39,8 +44,12 @@ describe('RedmineClient', () => {
     })
 
     expect(client.getApiUrl()).toBe('https://redmine.test/api')
-    expect(httpClient.configuredConfig?.baseURL).toBe('https://redmine.test/api')
-    expect(httpClient.configuredConfig?.headers?.['X-Redmine-API-Key']).toBe('secret-key-xyz')
+    expect(httpClient.configuredConfig?.baseURL).toBe(
+      'https://redmine.test/api',
+    )
+    expect(httpClient.configuredConfig?.headers?.['X-Redmine-API-Key']).toBe(
+      'secret-key-xyz',
+    )
   })
 
   it('deve buscar usuário atual via getCurrentUser', async () => {
@@ -90,7 +99,9 @@ describe('RedmineClient', () => {
     expect(result.isSuccess()).toBe(true)
     if (result.isSuccess()) {
       expect(result.success.issues.length).toBe(2)
-      expect(result.success.issues[0].subject).toBe('Corrigir falha no checkout de pagamentos')
+      expect(result.success.issues[0].subject).toBe(
+        'Corrigir falha no checkout de pagamentos',
+      )
     }
   })
 
@@ -132,7 +143,14 @@ describe('RedmineClient', () => {
 
   it('deve extrair token de atomKey quando o usuário colar a URL completa do feed Atom', async () => {
     const httpClient = new MockHttpClient()
-    httpClient.setRoute('GET', 'activity.atom', 200, '<feed xmlns="http://www.w3.org/2005/Atom"></feed>', undefined, { key: 'abcde12345fedcba' })
+    httpClient.setRoute(
+      'GET',
+      'activity.atom',
+      200,
+      '<feed xmlns="http://www.w3.org/2005/Atom"></feed>',
+      undefined,
+      { key: 'abcde12345fedcba' },
+    )
 
     const client = new RedmineClient(httpClient, {
       apiUrl: 'https://redmine.test',
@@ -161,4 +179,3 @@ describe('RedmineClient', () => {
     expect(client34.getVersion()).toBe('3.4')
   })
 })
-
