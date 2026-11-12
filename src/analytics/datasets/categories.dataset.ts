@@ -1,7 +1,7 @@
 import { AppError, Either } from '@mr-tick/sdk'
 
 import { RedmineClient } from '../../client/RedmineClient'
-import { requiredNativeId } from '../helpers/filter-resolver'
+import { requiredNativeIds } from '../helpers/filter-resolver'
 import { nullable } from '../helpers/native-fields'
 import { RedmineAnalyticsPage } from '../paging'
 
@@ -9,19 +9,29 @@ export async function fetchCategoriesPage(
   client: RedmineClient,
   params: Record<string, string>,
 ): Promise<Either<AppError, RedmineAnalyticsPage>> {
-  const project = requiredNativeId(params, 'project_id')
-  if (project.isFailure()) return project.forwardFailure()
-  const result = await client.listIssueCategories(project.success)
-  if (result.isFailure()) return result.forwardFailure()
+  const projects = requiredNativeIds(params, 'project_id')
+  if (projects.isFailure()) return projects.forwardFailure()
+
+  const rows: RedmineAnalyticsPage['rows'] = []
+
+  for (const projectId of projects.success) {
+    const result = await client.listIssueCategories(projectId)
+    if (result.isFailure()) return result.forwardFailure()
+
+    for (const category of result.success.issue_categories) {
+      rows.push({
+        id: category.id,
+        project_id: nullable(category.project?.id),
+        project: nullable(category.project?.name),
+        name: category.name,
+        assignee_id: nullable(category.assigned_to?.id),
+        assignee: nullable(category.assigned_to?.name),
+      })
+    }
+  }
+
   return Either.success({
-    rows: result.success.issue_categories.map((category) => ({
-      id: category.id,
-      project_id: nullable(category.project?.id),
-      project: nullable(category.project?.name),
-      name: category.name,
-      assignee_id: nullable(category.assigned_to?.id),
-      assignee: nullable(category.assigned_to?.name),
-    })),
+    rows,
     atomic: true,
   })
 }

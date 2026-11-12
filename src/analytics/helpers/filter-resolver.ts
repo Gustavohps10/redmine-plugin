@@ -242,3 +242,26 @@ export function requiredNativeId(
 
   return Either.success(value)
 }
+
+export function requiredNativeIds(
+  params: Record<string, string>,
+  field: string,
+): Either<AppError, string[]> {
+  const value = params[field]
+
+  if (value === undefined)
+    return Either.failure(
+      AppError.ValidationError(`ANALYTICS_${field.toUpperCase()}_REQUIRED`),
+    )
+
+  if (/^\d+$/.test(value)) return Either.success([value])
+
+  if (!/^=\d+(?:\|\d+)*$/.test(value))
+    return Either.failure(
+      AppError.ValidationError(`ANALYTICS_${field.toUpperCase()}_REQUIRED`),
+    )
+
+  const uniqueIds = Array.from(new Set(value.slice(1).split('|')))
+
+  return Either.success(uniqueIds)
+}
