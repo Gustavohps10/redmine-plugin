@@ -38,6 +38,44 @@ describe('In-flight request identity', () => {
 })
 
 describe('Private analytics HTTP budget', () => {
+  it.each(['2', 'Thu, 12 Nov 2026 12:00:02 GMT', undefined])(
+    'defers calls without hitting the server after a 429 with Retry-After %s',
+    async (header) => {
+      const now = Date.parse('2026-11-12T12:00:00Z')
+      const clock = vi.spyOn(Date, 'now').mockReturnValue(now)
+      try {
+        const http = new MockHttpClient()
+        const details =
+          header === undefined ? undefined : { retryAfter: [header] }
+        const get = vi
+          .spyOn(http, 'get')
+          .mockResolvedValueOnce(
+            Either.failure(AppError.Http(429, 'HTTP 429', details)),
+          )
+          .mockResolvedValue(Either.success('value'))
+        const analytics = BoundedAnalyticsHttpClient.create(http)
+        const options = {
+          responseValidator: (value: JsonValue): value is string =>
+            typeof value === 'string',
+        }
+        expect((await analytics.get('/first', options)).isFailure()).toBe(true)
+        const deferred = await analytics.get('/second', options)
+        expect(deferred).toMatchObject({
+          failure: {
+            statusCode: 429,
+            messageKey: 'ANALYTICS_RATE_LIMIT_DEFERRED',
+          },
+        })
+        expect(get).toHaveBeenCalledTimes(1)
+        clock.mockReturnValue(now + 2000)
+        expect((await analytics.get('/second', options)).isSuccess()).toBe(true)
+        expect(get).toHaveBeenCalledTimes(2)
+      } finally {
+        clock.mockRestore()
+      }
+    },
+  )
+
   it('serializes analytics and preserves the independent personal transport', async () => {
     const http = new MockHttpClient()
     const entered = barrier(),

@@ -1127,3 +1127,292 @@ describe('Unsupported selection boundaries', () => {
     expect(http.requests).toHaveLength(0)
   })
 })
+
+describe('Adaptive date subdivision for Redmine 3.4 time entries', () => {
+  function entry(id: number, spentOn: string) {
+    return {
+      id,
+      project: { id: 1, name: 'Core' },
+      user: { id: 2, name: 'Ana' },
+      activity: { id: 3, name: 'Dev' },
+      hours: 2,
+      spent_on: spentOn,
+      created_on: `${spentOn}T10:00:00Z`,
+      updated_on: `${spentOn}T10:00:00Z`,
+    }
+  }
+
+  it('subdivides multi-page Redmine 3.4 time entry ranges into non-overlapping slices and reuses first pages', async () => {
+    const paging = new RedmineAnalyticsPaging()
+    const timeManifest = REDMINE_ANALYTICS_DATASETS.find(
+      (item) => item.id === 'redmine_time_entries',
+    )
+    if (timeManifest === undefined) throw new Error('Missing time manifest')
+
+    const calls: Array<{
+      offset: number
+      limit: number
+      range?: { startDate: string; endDate: string }
+    }> = []
+
+    const read = vi.fn(
+      async (
+        offset: number,
+        limit: number,
+        range?: { startDate: string; endDate: string },
+      ) => {
+        calls.push({ offset, limit, range })
+
+        if (range === undefined)
+          return Either.success({
+            rows: [{ id: 1, date: '2026-11-01', hours: 2 }],
+            total: 2,
+            offset: 0,
+            limit: 1,
+            atomic: false,
+          })
+
+        if (range.startDate === '2026-11-01' && range.endDate === '2026-11-02')
+          return Either.success({
+            rows: [{ id: 1, date: '2026-11-01', hours: 2 }],
+            total: 1,
+            offset: 0,
+            limit: 1,
+            atomic: false,
+          })
+
+        if (range.startDate === '2026-11-03' && range.endDate === '2026-11-04')
+          return Either.success({
+            rows: [{ id: 2, date: '2026-11-04', hours: 3 }],
+            total: 1,
+            offset: 0,
+            limit: 1,
+            atomic: false,
+          })
+
+        return Either.failure(AppError.NotFound('UNEXPECTED_RANGE'))
+      },
+    )
+
+    const page0 = await paging.fetch(
+      timeManifest,
+      {
+        datasetId: 'redmine_time_entries',
+        startDate: '2026-11-01',
+        endDate: '2026-11-04',
+        execution: { kind: 'snapshot', batchSize: 1 },
+      },
+      read,
+      true,
+    )
+    expect(page0.isSuccess()).toBe(true)
+    expect(page0.success.rows).toEqual([
+      { id: 1, date: '2026-11-01', hours: 2 },
+    ])
+    const cursor = snapshot(page0.success).continuation?.cursor
+    expect(cursor).toBeDefined()
+
+    const page1 = await paging.fetch(
+      timeManifest,
+      {
+        datasetId: 'redmine_time_entries',
+        startDate: '2026-11-01',
+        endDate: '2026-11-04',
+        execution: { kind: 'snapshot', batchSize: 1, cursor },
+      },
+      read,
+      true,
+    )
+    expect(page1.isSuccess()).toBe(true)
+    expect(page1.success.rows).toEqual([
+      { id: 2, date: '2026-11-04', hours: 3 },
+    ])
+    expect(snapshot(page1.success)).toMatchObject({
+      coverage: 'unverified',
+      coverageReason: 'REDMINE_REMOTE_SNAPSHOT_UNAVAILABLE',
+      batch: { index: 1, offset: 1, finished: true, totalRows: 2 },
+    })
+    expect(calls).toEqual([
+      { offset: 0, limit: 1, range: undefined },
+      {
+        offset: 0,
+        limit: 1,
+        range: { startDate: '2026-11-01', endDate: '2026-11-02' },
+      },
+      {
+        offset: 0,
+        limit: 1,
+        range: { startDate: '2026-11-03', endDate: '2026-11-04' },
+      },
+    ])
+  })
+
+  it('rejects duplicate row identity across adjacent date slices and mismatched slice totals on Redmine 3.4', async () => {
+    const http = new MockHttpClient()
+    const provider = new RedmineAnalyticsProvider(
+      new RedmineClient(http, {
+        apiUrl: 'https://redmine.test',
+        apiKey: 'reader',
+        version: '3.4',
+      }),
+    )
+
+    http.setRoute(
+      'GET',
+      '/time_entries.json',
+      200,
+      {
+        time_entries: [entry(1, '2026-11-01')],
+        total_count: 2,
+        offset: 0,
+        limit: 1,
+      },
+      undefined,
+      { limit: '1', offset: '0', spent_on: '><2026-11-01|2026-11-02' },
+    )
+    http.setRoute(
+      'GET',
+      '/time_entries.json',
+      200,
+      {
+        time_entries: [entry(1, '2026-11-01')],
+        total_count: 1,
+        offset: 0,
+        limit: 1,
+      },
+      undefined,
+      { limit: '1', offset: '0', spent_on: '><2026-11-01|2026-11-01' },
+    )
+    http.setRoute(
+      'GET',
+      '/time_entries.json',
+      200,
+      {
+        time_entries: [entry(1, '2026-11-02')],
+        total_count: 1,
+        offset: 0,
+        limit: 1,
+      },
+      undefined,
+      { limit: '1', offset: '0', spent_on: '><2026-11-02|2026-11-02' },
+    )
+
+    const first = await provider.fetchAnalyticsDataset({
+      datasetId: 'redmine_time_entries',
+      startDate: '2026-11-01',
+      endDate: '2026-11-02',
+      execution: { kind: 'snapshot', batchSize: 1 },
+    })
+    expect(first.isSuccess()).toBe(true)
+
+    const duplicateAcrossSlices = await provider.fetchAnalyticsDataset({
+      datasetId: 'redmine_time_entries',
+      startDate: '2026-11-01',
+      endDate: '2026-11-02',
+      execution: {
+        kind: 'snapshot',
+        batchSize: 1,
+        cursor: snapshot(first.success).continuation?.cursor,
+      },
+    })
+    expect(duplicateAcrossSlices.isFailure()).toBe(true)
+    expect(duplicateAcrossSlices.failure.messageKey).toBe(
+      'ANALYTICS_DUPLICATE_ROW_IDENTITY',
+    )
+
+    http.setRoute(
+      'GET',
+      '/time_entries.json',
+      200,
+      {
+        time_entries: [entry(2, '2026-11-02')],
+        total_count: 2,
+        offset: 0,
+        limit: 1,
+      },
+      undefined,
+      { limit: '1', offset: '0', spent_on: '><2026-11-02|2026-11-02' },
+    )
+    const mismatchedTotals = await provider.fetchAnalyticsDataset({
+      datasetId: 'redmine_time_entries',
+      startDate: '2026-11-01',
+      endDate: '2026-11-02',
+      execution: { kind: 'snapshot', batchSize: 1 },
+    })
+    expect(mismatchedTotals.isFailure()).toBe(true)
+    expect(mismatchedTotals.failure.messageKey).toBe(
+      'ANALYTICS_COLLECTION_CHANGED',
+    )
+  })
+
+  it('retries once on transient subrange total divergence within budget before succeeding', async () => {
+    const timeEntriesManifest = REDMINE_ANALYTICS_DATASETS.find(
+      (item) => item.id === 'redmine_time_entries',
+    )
+    if (timeEntriesManifest === undefined) throw new Error('Missing manifest')
+
+    const paging = new RedmineAnalyticsPaging()
+    let parentReads = 0
+    const read = vi.fn(
+      async (
+        offset: number,
+        limit: number,
+        range?: { startDate: string; endDate: string },
+      ) => {
+        if (
+          range === undefined ||
+          (range.startDate === '2026-11-01' && range.endDate === '2026-11-02')
+        ) {
+          parentReads += 1
+          return Either.success({
+            rows: [{ id: '1', date: '2026-11-01', hours: 2 }],
+            total: parentReads === 1 ? 2 : 3,
+            offset,
+            limit,
+            atomic: false,
+          })
+        }
+
+        if (range.startDate === '2026-11-01' && range.endDate === '2026-11-01')
+          return Either.success({
+            rows: [{ id: '1', date: '2026-11-01', hours: 2 }],
+            total: 1,
+            offset,
+            limit,
+            atomic: false,
+          })
+
+        return Either.success({
+          rows:
+            offset === 0
+              ? [{ id: '2', date: '2026-11-02', hours: 3 }]
+              : [{ id: '3', date: '2026-11-02', hours: 4 }],
+          total: 2,
+          offset,
+          limit,
+          atomic: false,
+        })
+      },
+    )
+
+    const first = await paging.fetch(
+      timeEntriesManifest,
+      {
+        datasetId: 'redmine_time_entries',
+        startDate: '2026-11-01',
+        endDate: '2026-11-02',
+        execution: { kind: 'snapshot', batchSize: 1 },
+      },
+      read,
+      true,
+    )
+    expect(first.isSuccess()).toBe(true)
+    expect(parentReads).toBe(2)
+    expect(snapshot(first.success).batch).toEqual({
+      index: 0,
+      offset: 0,
+      finished: false,
+      totalRows: 3,
+    })
+  })
+})

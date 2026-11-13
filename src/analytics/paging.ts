@@ -26,6 +26,19 @@ export interface RedmineAnalyticsPage {
   unverifiedReason?: string
 }
 
+type ReadPage = (
+  offset: number,
+  limit: number,
+  range?: { startDate: string; endDate: string },
+) => Promise<Either<AppError, RedmineAnalyticsPage>>
+
+interface TimeEntryRange {
+  startDate: string
+  endDate: string
+  first: RedmineAnalyticsPage
+  total: number
+}
+
 interface Scan {
   scopeKey: string
   batchSize: number
@@ -38,6 +51,7 @@ interface Scan {
   cursor: string
   previousCursor?: string
   previousResult?: AnalyticsDatasetResult
+  ranges?: TimeEntryRange[]
 }
 
 function updateMaxTimestamp(
@@ -70,10 +84,8 @@ export class RedmineAnalyticsPaging {
   public async fetch(
     manifest: AnalyticsDatasetManifest,
     input: AnalyticsDatasetQueryInput,
-    read: (
-      offset: number,
-      limit: number,
-    ) => Promise<Either<AppError, RedmineAnalyticsPage>>,
+    read: ReadPage,
+    splitTimeEntries = false,
   ): Promise<Either<AppError, AnalyticsDatasetResult>> {
     let kind: 'snapshot' | 'changes' = 'snapshot'
     let batchSize = 100
@@ -102,16 +114,270 @@ export class RedmineAnalyticsPaging {
       kind,
       cursor,
     ])
-    return this.inFlight.run(key, () => this.read(manifest, input, read))
+    return this.inFlight.run(key, () =>
+      this.read(manifest, input, read, splitTimeEntries),
+    )
+  }
+
+  private async readPage(
+    scan: Scan,
+    input: AnalyticsDatasetQueryInput,
+    read: ReadPage,
+    split: boolean,
+  ): Promise<
+    Either<
+      AppError,
+      { page: RedmineAnalyticsPage; requests: number; retries: number }
+    >
+  > {
+    let requests = 0
+    let retries = 0
+
+    const trackedRead: ReadPage = (offset, limit, range) => {
+      requests += 1
+      return read(offset, limit, range)
+    }
+
+    if (scan.ranges === undefined) {
+      const original = await trackedRead(scan.offset, scan.batchSize)
+      if (original.isFailure() || !split || scan.offset !== 0) {
+        if (original.isFailure()) return original.forwardFailure()
+        return Either.success({ page: original.success, requests, retries })
+      }
+
+      const { startDate, endDate } = input
+      const page = original.success
+
+      if (
+        startDate === undefined ||
+        endDate === undefined ||
+        !/^\d{4}-\d{2}-\d{2}$/.test(startDate) ||
+        !/^\d{4}-\d{2}-\d{2}$/.test(endDate) ||
+        startDate >= endDate ||
+        page.total === undefined ||
+        !Number.isSafeInteger(page.total) ||
+        page.total <= scan.batchSize ||
+        page.total > 50000 ||
+        page.offset !== 0 ||
+        page.atomic
+      )
+        return Either.success({ page, requests, retries })
+
+      let remaining = 30
+      let retriedSplit = false
+      const ranges: TimeEntryRange[] = []
+
+      const isSubsliceConsistent = (
+        expectedTotal: number,
+        leftPage: RedmineAnalyticsPage,
+        rightPage: RedmineAnalyticsPage,
+      ): boolean => {
+        const leftTotal = leftPage.total
+        const rightTotal = rightPage.total
+
+        if (
+          leftTotal === undefined ||
+          rightTotal === undefined ||
+          !Number.isSafeInteger(leftTotal) ||
+          !Number.isSafeInteger(rightTotal) ||
+          leftTotal < 0 ||
+          rightTotal < 0
+        )
+          return false
+
+        if (
+          leftTotal + rightTotal !== expectedTotal ||
+          leftPage.offset !== 0 ||
+          rightPage.offset !== 0 ||
+          leftPage.rows.length > leftTotal ||
+          rightPage.rows.length > rightTotal ||
+          (leftTotal > 0 && leftPage.rows.length === 0) ||
+          (rightTotal > 0 && rightPage.rows.length === 0)
+        )
+          return false
+
+        return true
+      }
+
+      const visit = async (
+        range: TimeEntryRange,
+      ): Promise<Either<AppError, null>> => {
+        if (
+          range.total <= scan.batchSize ||
+          range.startDate === range.endDate ||
+          remaining < 2
+        ) {
+          ranges.push(range)
+          return Either.success(null)
+        }
+
+        const start = Date.parse(range.startDate)
+        const end = Date.parse(range.endDate)
+        if (!Number.isFinite(start) || !Number.isFinite(end) || end <= start)
+          return Either.failure(
+            AppError.ValidationError('ANALYTICS_DATE_RANGE_INVALID'),
+          )
+
+        const dayMs = 86_400_000
+        const middle = start + Math.floor((end - start) / dayMs / 2) * dayMs
+        const left = {
+          startDate: range.startDate,
+          endDate: new Date(middle).toISOString().slice(0, 10),
+        }
+        const right = {
+          startDate: new Date(middle + dayMs).toISOString().slice(0, 10),
+          endDate: range.endDate,
+        }
+
+        remaining -= 2
+        let first = await trackedRead(0, scan.batchSize, left)
+        if (first.isFailure()) return first.forwardFailure()
+        let second = await trackedRead(0, scan.batchSize, right)
+        if (second.isFailure()) return second.forwardFailure()
+
+        let expectedParentTotal = range.total
+
+        if (
+          !isSubsliceConsistent(
+            expectedParentTotal,
+            first.success,
+            second.success,
+          ) &&
+          !retriedSplit &&
+          remaining >= 3
+        ) {
+          retriedSplit = true
+          retries += 1
+          remaining -= 3
+          const refreshedParent = await trackedRead(0, scan.batchSize, {
+            startDate: range.startDate,
+            endDate: range.endDate,
+          })
+          if (refreshedParent.isFailure())
+            return refreshedParent.forwardFailure()
+
+          const refreshedTotal = refreshedParent.success.total
+          if (
+            refreshedTotal !== undefined &&
+            Number.isSafeInteger(refreshedTotal) &&
+            refreshedTotal >= 0 &&
+            refreshedTotal <= 50000
+          )
+            expectedParentTotal = refreshedTotal
+
+          first = await trackedRead(0, scan.batchSize, left)
+          if (first.isFailure()) return first.forwardFailure()
+          second = await trackedRead(0, scan.batchSize, right)
+          if (second.isFailure()) return second.forwardFailure()
+        }
+
+        const leftTotal = first.success.total
+        const rightTotal = second.success.total
+
+        if (
+          leftTotal === undefined ||
+          rightTotal === undefined ||
+          !isSubsliceConsistent(
+            expectedParentTotal,
+            first.success,
+            second.success,
+          )
+        )
+          return Either.failure(
+            AppError.ValidationError('ANALYTICS_COLLECTION_CHANGED'),
+          )
+
+        const earlier = await visit({
+          ...left,
+          first: first.success,
+          total: leftTotal,
+        })
+        if (earlier.isFailure()) return earlier
+
+        return visit({ ...right, first: second.success, total: rightTotal })
+      }
+
+      const planned = await visit({
+        startDate,
+        endDate,
+        first: page,
+        total: page.total,
+      })
+      if (planned.isFailure()) return planned.forwardFailure()
+
+      scan.ranges = ranges
+    }
+
+    let offset = scan.offset
+    const total = scan.ranges.reduce((sum, range) => sum + range.total, 0)
+
+    for (const range of scan.ranges) {
+      if (offset >= range.total) {
+        offset -= range.total
+        continue
+      }
+
+      let result: Either<AppError, RedmineAnalyticsPage> = Either.success(
+        range.first,
+      )
+
+      if (offset > 0)
+        result = await trackedRead(offset, scan.batchSize, {
+          startDate: range.startDate,
+          endDate: range.endDate,
+        })
+
+      if (result.isFailure()) return result.forwardFailure()
+      let page = result.success
+
+      if (
+        offset > 0 &&
+        (page.total !== range.total ||
+          page.offset !== offset ||
+          page.rows.length === 0 ||
+          offset + page.rows.length > range.total)
+      ) {
+        retries += 1
+        const retriedPage = await trackedRead(offset, scan.batchSize, {
+          startDate: range.startDate,
+          endDate: range.endDate,
+        })
+        if (retriedPage.isFailure()) return retriedPage.forwardFailure()
+        page = retriedPage.success
+      }
+
+      if (
+        page.total !== range.total ||
+        page.offset !== offset ||
+        page.rows.length === 0 ||
+        offset + page.rows.length > range.total
+      )
+        return Either.failure(
+          AppError.ValidationError('ANALYTICS_COLLECTION_CHANGED'),
+        )
+
+      return Either.success({
+        page: {
+          ...page,
+          offset: scan.offset,
+          total,
+          unverifiedReason: 'REDMINE_REMOTE_SNAPSHOT_UNAVAILABLE',
+        },
+        requests,
+        retries,
+      })
+    }
+
+    return Either.failure(
+      AppError.ValidationError('ANALYTICS_PAGE_PREMATURE_END'),
+    )
   }
 
   private async read(
     manifest: AnalyticsDatasetManifest,
     input: AnalyticsDatasetQueryInput,
-    read: (
-      offset: number,
-      limit: number,
-    ) => Promise<Either<AppError, RedmineAnalyticsPage>>,
+    read: ReadPage,
+    splitTimeEntries: boolean,
   ): Promise<Either<AppError, AnalyticsDatasetResult>> {
     const execution = input.execution
     let kind: 'snapshot' | 'changes' = 'snapshot'
@@ -199,10 +465,10 @@ export class RedmineAnalyticsPaging {
     }
 
     try {
-      const page = await read(scan.offset, scan.batchSize)
+      const page = await this.readPage(scan, input, read, splitTimeEntries)
       if (page.isFailure()) return page.forwardFailure()
 
-      const data = page.success
+      const data = page.success.page
       if (!data.atomic && data.rows.length > batchSize)
         return Either.failure(
           AppError.ValidationError('ANALYTICS_PAGE_SIZE_EXCEEDED'),
@@ -324,6 +590,10 @@ export class RedmineAnalyticsPaging {
         continuation,
         checkpointInput,
         nextMaxUpdated,
+        metrics: {
+          requests: page.success.requests,
+          retries: page.success.retries,
+        },
       })
 
       const result: AnalyticsDatasetResult = {
@@ -379,6 +649,7 @@ function buildExecutionResult(params: {
   continuation: { cursor: string } | undefined
   checkpointInput: string | undefined
   nextMaxUpdated: string | undefined
+  metrics: { requests: number; retries: number }
 }): AnalyticsDatasetResult['execution'] {
   if (params.kind === 'changes' && params.checkpointInput !== undefined) {
     let responseCheckpoint = params.checkpointInput
@@ -399,6 +670,7 @@ function buildExecutionResult(params: {
       coverageReason: params.coverageReason,
       batch: params.batch,
       continuation: params.continuation,
+      metrics: params.metrics,
     }
   }
 
@@ -419,6 +691,7 @@ function buildExecutionResult(params: {
     checkpoint: snapshotCheckpoint,
     batch: params.batch,
     continuation: params.continuation,
+    metrics: params.metrics,
   }
 }
 

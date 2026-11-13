@@ -299,4 +299,51 @@ describe.each([
     expect(finished).toBe(true)
     expect(windowIds.size).toBeGreaterThan(0)
   }, 120000)
+
+  it('extracts multi-month recent reconciliation window on redmine_time_entries with adaptive subdivision on 3.4', async () => {
+    const provider = create()
+    const startDate = '2026-09-01'
+    const endDate = '2026-11-30'
+    const recentIds = new Set<number>()
+    let cursor: string | undefined
+    let finished = false
+    let expectedTotal: number | undefined
+
+    for (let page = 0; page < 50; page += 1) {
+      const result = await provider.fetchAnalyticsDataset({
+        datasetId: 'redmine_time_entries',
+        startDate,
+        endDate,
+        execution: { kind: 'snapshot', batchSize: 100, cursor },
+      })
+      expect(result.isSuccess(), JSON.stringify(result)).toBe(true)
+      if (result.isFailure()) return
+
+      for (const row of result.success.rows) {
+        if (typeof row.id !== 'number' || typeof row.date !== 'string')
+          throw new Error('Recent window row fields missing')
+
+        expect(row.date >= startDate && row.date <= endDate).toBe(true)
+        expect(recentIds.has(row.id)).toBe(false)
+        recentIds.add(row.id)
+      }
+
+      if (result.success.execution.kind !== 'snapshot')
+        throw new Error('Expected snapshot execution')
+
+      expectedTotal = result.success.execution.batch?.totalRows
+
+      if (result.success.execution.continuation === undefined) {
+        expect(result.success.execution.coverage).toBe('unverified')
+        finished = true
+        break
+      }
+
+      cursor = result.success.execution.continuation.cursor
+    }
+
+    expect(finished).toBe(true)
+    expect(recentIds.size).toBeGreaterThan(100)
+    expect(recentIds.size).toBe(expectedTotal)
+  }, 120000)
 })

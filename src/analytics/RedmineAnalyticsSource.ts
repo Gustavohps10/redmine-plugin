@@ -35,8 +35,18 @@ export class RedmineAnalyticsProvider implements IAnalyticsProvider {
     )
     if (manifest === undefined)
       return Either.failure(AppError.NotFound('ANALYTICS_DATASET_NOT_FOUND'))
-    return this.paging.fetch(manifest, input, (offset, limit) =>
-      fetchRedmineAnalyticsPage(this.client, input, offset, limit),
+    return this.paging.fetch(
+      manifest,
+      input,
+      (offset, limit, range) =>
+        fetchRedmineAnalyticsPage(
+          this.client,
+          { ...input, ...range },
+          offset,
+          limit,
+        ),
+      input.datasetId === 'redmine_time_entries' &&
+        this.client.getVersion().startsWith('3.4'),
     )
   }
 
