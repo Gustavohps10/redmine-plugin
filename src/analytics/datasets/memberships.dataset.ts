@@ -48,23 +48,37 @@ export async function fetchMembershipsPage(
   const rows: RedmineAnalyticsPage['rows'] = []
 
   for (const projectId of projects.success) {
-    const result = await client.listMemberships(projectId, {
-      limit: '100',
-      offset: '0',
-    })
-    if (result.isFailure()) return result.forwardFailure()
+    let offset = 0
+    const pageLimit = 100
 
-    for (const member of result.success.memberships) {
-      rows.push({
-        id: member.id,
-        project_id: member.project.id,
-        project: member.project.name,
-        user_id: nullable(member.user?.id),
-        user: nullable(member.user?.name),
-        group_id: nullable(member.group?.id),
-        group: nullable(member.group?.name),
-        roles: JSON.stringify(member.roles),
+    for (let page = 0; page < 50; page += 1) {
+      const result = await client.listMemberships(projectId, {
+        limit: String(pageLimit),
+        offset: String(offset),
       })
+      if (result.isFailure()) return result.forwardFailure()
+
+      const data = result.success
+
+      for (const member of data.memberships) {
+        rows.push({
+          id: member.id,
+          project_id: member.project.id,
+          project: member.project.name,
+          user_id: nullable(member.user?.id),
+          user: nullable(member.user?.name),
+          group_id: nullable(member.group?.id),
+          group: nullable(member.group?.name),
+          roles: JSON.stringify(member.roles),
+        })
+      }
+
+      offset += data.memberships.length
+      if (
+        (data.total_count !== undefined && offset >= data.total_count) ||
+        data.memberships.length < pageLimit
+      )
+        break
     }
   }
 

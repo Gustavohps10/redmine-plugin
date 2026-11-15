@@ -17,8 +17,14 @@ import { fetchRedmineAnalyticsPage } from './index'
 import { REDMINE_ANALYTICS_DATASETS } from './manifest'
 import { RedmineAnalyticsPaging } from './paging'
 
+const FILTER_OPTIONS_CACHE_TTL_MS = 60_000
+
 export class RedmineAnalyticsProvider implements IAnalyticsProvider {
   private readonly paging = new RedmineAnalyticsPaging()
+  private readonly filterOptionsCache = new Map<
+    AnalyticsFilterDynamicSource,
+    { expiresAt: number; options: AnalyticsFilterOption[] }
+  >()
   constructor(private readonly client: RedmineClient) {}
 
   public async listAnalyticsDatasets(): Promise<
@@ -53,6 +59,10 @@ export class RedmineAnalyticsProvider implements IAnalyticsProvider {
   public async getFilterOptions(
     source: AnalyticsFilterDynamicSource,
   ): Promise<Either<AppError, AnalyticsFilterOption[]>> {
+    const cached = this.filterOptionsCache.get(source)
+    if (cached !== undefined && cached.expiresAt > Date.now())
+      return Either.success(cached.options)
+
     const datasets: Record<AnalyticsFilterDynamicSource, string> = {
       projects: 'redmine_projects',
       members: 'redmine_users',
@@ -86,7 +96,15 @@ export class RedmineAnalyticsProvider implements IAnalyticsProvider {
         return Either.failure(
           AppError.ValidationError('ANALYTICS_FILTER_EXECUTION_INVALID'),
         )
-      if (execution.continuation === undefined) return Either.success(options)
+
+      if (execution.continuation === undefined) {
+        this.filterOptionsCache.set(source, {
+          expiresAt: Date.now() + FILTER_OPTIONS_CACHE_TTL_MS,
+          options,
+        })
+        return Either.success(options)
+      }
+
       cursor = execution.continuation.cursor
     }
     return Either.failure(

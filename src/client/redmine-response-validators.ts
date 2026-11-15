@@ -95,7 +95,10 @@ export function isRedmineUserAPI(
     (value.api_key === undefined || typeof value.api_key === 'string') &&
     (value.custom_fields === undefined ||
       (Array.isArray(value.custom_fields) &&
-        value.custom_fields.every((item) => isRedmineCustomField(item))))
+        value.custom_fields.every((item) => isRedmineCustomField(item)))) &&
+    (value.relations === undefined ||
+      (Array.isArray(value.relations) &&
+        value.relations.every((item) => isRedmineIssueRelationAPI(item))))
   )
 }
 
@@ -143,7 +146,10 @@ export function isRedmineIssueAPI(
     typeof value.updated_on === 'string' &&
     (value.custom_fields === undefined ||
       (Array.isArray(value.custom_fields) &&
-        value.custom_fields.every((item) => isRedmineCustomField(item))))
+        value.custom_fields.every((item) => isRedmineCustomField(item)))) &&
+    (value.relations === undefined ||
+      (Array.isArray(value.relations) &&
+        value.relations.every((item) => isRedmineIssueRelationAPI(item))))
   )
 }
 
@@ -194,7 +200,10 @@ export function isRedmineTimeEntryAPI(
     typeof value.updated_on === 'string' &&
     (value.custom_fields === undefined ||
       (Array.isArray(value.custom_fields) &&
-        value.custom_fields.every((item) => isRedmineCustomField(item))))
+        value.custom_fields.every((item) => isRedmineCustomField(item)))) &&
+    (value.relations === undefined ||
+      (Array.isArray(value.relations) &&
+        value.relations.every((item) => isRedmineIssueRelationAPI(item))))
   )
 }
 

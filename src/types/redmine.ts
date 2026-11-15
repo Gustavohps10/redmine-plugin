@@ -72,6 +72,7 @@ export type RedmineIssueAPI = {
   closed_on?: string | null
   custom_fields?: RedmineCustomField[]
   journals?: RedmineJournalAPI[]
+  relations?: RedmineIssueRelationAPI[]
 }
 
 export type RedmineIssuesResponse = {

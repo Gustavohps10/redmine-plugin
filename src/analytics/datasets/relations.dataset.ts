@@ -14,22 +14,33 @@ export async function fetchRelationsPage(
 
   const rows: RedmineAnalyticsPage['rows'] = []
   const seenIds = new Set<number>()
+  const chunkSize = 100
 
-  for (const issueId of issues.success) {
-    const result = await client.listIssueRelations(issueId)
+  for (let start = 0; start < issues.success.length; start += chunkSize) {
+    const chunk = issues.success.slice(start, start + chunkSize)
+    const result = await client.listIssues({
+      issue_id: chunk.join(','),
+      status_id: '*',
+      include: 'relations',
+      limit: String(chunkSize),
+    })
     if (result.isFailure()) return result.forwardFailure()
 
-    for (const relation of result.success.relations) {
-      if (seenIds.has(relation.id)) continue
-      seenIds.add(relation.id)
+    for (const issue of result.success.issues) {
+      if (issue.relations === undefined) continue
 
-      rows.push({
-        id: relation.id,
-        issue_id: relation.issue_id,
-        issue_to_id: relation.issue_to_id,
-        relation_type: relation.relation_type,
-        delay: nullable(relation.delay),
-      })
+      for (const relation of issue.relations) {
+        if (seenIds.has(relation.id)) continue
+        seenIds.add(relation.id)
+
+        rows.push({
+          id: relation.id,
+          issue_id: relation.issue_id,
+          issue_to_id: relation.issue_to_id,
+          relation_type: relation.relation_type,
+          delay: nullable(relation.delay),
+        })
+      }
     }
   }
 
