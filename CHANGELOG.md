@@ -1,5 +1,28 @@
 # @timelapse/redmine-plugin
 
+## 0.12.0
+
+### Minor Changes
+
+- cfebdb4: Implement declarative Phase 3 analytical sync strategies, server-derived issue checkpoints, and canonical date selection mapping across Redmine 3.4, 5.1, and 6.0.
+
+  - Declare `modes: ['snapshot', 'changes']` and `changes: { deletions: 'none' }` on `redmine_issues`, computing `checkpoint` exclusively from observed server `updated_date` timestamps, applying inclusive `updated_on >= checkpoint` with deterministic `sort=id:asc` and explicit filter intersection, and failing loudly if `total_count` changes mid-delta.
+  - Declare `windowRescan: { dateColumn: 'date' }` on `redmine_time_entries` (`spent_on` scope only, never sending ignored `updated_on`/`created_on`), keep all remaining datasets (including `redmine_issue_discovery`) on explicit `snapshot` mode, remove legacy `filters.date_range` in favor of `selection: { dateRange, project }`, remove unused CSV helper code, and run Docker integration tests sequentially via `--no-file-parallelism`.
+
+- cfebdb4: Replace analytical CSV extraction with bounded native JSON datasets, connection-owned continuations, explicit traversal/coverage metadata and native custom field identities. Require project/task scopes where the provider API does; propagate permission and page failures without silently returning truncated data or scanning memberships.
+
+  Reuse Atom parsing for limited issue discovery followed by REST batch enrichment, and isolate analytical HTTP concurrency, queue, timeout and accepted payload budgets from personal clients. Fix in-flight key collisions caused by query separators. Multi-page Redmine scans remain unverified; unstable Redmine 3.4 pages fail explicitly.
+
+  Add an opt-in additive enterprise Docker fixture and validate the three-version matrix. Dataset IDs are now redmine_time_entries and redmine_issues, without legacy aliases. Release the updated SDK before distributing the addon.
+
+- cfebdb4: Register the independent analytics capability using the new SDK contract and separate the provider, catalog, filter resolution and dataset implementations from the personal datasource. Scope filter caches to each Redmine client.
+
+  Existing extraction paths declare unverified snapshot coverage and reject unsupported execution modes or cursors. Release the SDK containing the new analytics contribution before distributing this addon; local validation uses the officially linked SDK.
+
+### Patch Changes
+
+- cfebdb4: Respeita o prazo informado pelo Redmine após uma resposta 429, limita as novas tentativas de leitura analítica e subdivide intervalos de apontamentos no Redmine 3.4 com validação de identidade global.
+
 ## 0.11.3
 
 ### Patch Changes
