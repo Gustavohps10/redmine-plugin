@@ -30,7 +30,9 @@ describe('RedmineTaskProvider', () => {
       const firstTask = result.success[0]
       expect(firstTask.id).toBe('101')
       expect(firstTask.title).toBe('Corrigir falha no checkout de pagamentos')
-      expect(firstTask.description).toBe('Ao tentar finalizar a compra com PIX, ocorre timeout.')
+      expect(firstTask.description).toBe(
+        'Ao tentar finalizar a compra com PIX, ocorre timeout.',
+      )
       expect(firstTask.projectName).toBe('Projeto Alpha')
       expect(firstTask.status.name).toBe('Nova')
       expect(firstTask.status.id).toBe('1')
@@ -55,14 +57,20 @@ describe('RedmineTaskProvider', () => {
 
     // Checkpoint com a data e ID do primeiro registro (issue 101, atualizada em 2026-09-25T11:00:00Z)
     const checkpointDate = new Date('2026-09-25T11:00:00Z')
-    const result = await provider.pull('1', { updatedAt: checkpointDate, id: '101' }, 10)
+    const result = await provider.pull(
+      '1',
+      { updatedAt: checkpointDate, id: '101' },
+      10,
+    )
 
     expect(result.isSuccess()).toBe(true)
     if (result.isSuccess()) {
       // Somente a issue 102 (atualizada em 2026-09-25T11:30:00Z) deve ser retornada
       expect(result.success.length).toBe(1)
       expect(result.success[0].id).toBe('102')
-      expect(result.success[0].title).toBe('Implementar dashboard com métricas diárias')
+      expect(result.success[0].title).toBe(
+        'Implementar dashboard com métricas diárias',
+      )
     }
   })
 
@@ -85,7 +93,9 @@ describe('RedmineTaskProvider', () => {
     if (result.isSuccess()) {
       expect(result.success).not.toBeNull()
       expect(result.success?.id).toBe('101')
-      expect(result.success?.title).toBe('Corrigir falha no checkout de pagamentos')
+      expect(result.success?.title).toBe(
+        'Corrigir falha no checkout de pagamentos',
+      )
     }
   })
 
@@ -375,4 +385,3 @@ describe('RedmineTaskProvider', () => {
     }
   })
 })
-

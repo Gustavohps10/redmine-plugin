@@ -1,29 +1,50 @@
-import { AppError, DataSourceContext, Either, IHttpClient } from '@mr-tick/sdk'
+import {
+  AddonConnectionContext,
+  AppError,
+  Either,
+  IHttpClient,
+} from '@mr-tick/sdk'
 
 import {
   RedmineActivitiesResponse,
   RedmineCreateTimeEntryPayload,
+  RedmineGroupsResponse,
+  RedmineIssueCategoriesResponse,
+  RedmineIssueRelationsResponse,
   RedmineIssueResponse,
   RedmineIssuesResponse,
+  RedmineMembershipsResponse,
   RedminePrioritiesResponse,
+  RedmineProjectsResponse,
+  RedmineQueriesResponse,
   RedmineStatusesResponse,
   RedmineTimeEntriesResponse,
   RedmineTimeEntryResponse,
   RedmineTrackersResponse,
   RedmineUpdateTimeEntryPayload,
   RedmineUserResponse,
+  RedmineUsersResponse,
+  RedmineVersionsResponse,
 } from '../types/redmine'
 import { InFlightRequests } from './InFlightRequests'
 import {
   isRedmineActivitiesResponse,
+  isRedmineGroupsResponse,
+  isRedmineIssueCategoriesResponse,
+  isRedmineIssueRelationsResponse,
   isRedmineIssueResponse,
   isRedmineIssuesResponse,
+  isRedmineMembershipsResponse,
   isRedminePrioritiesResponse,
+  isRedmineProjectsResponse,
+  isRedmineQueriesResponse,
   isRedmineStatusesResponse,
   isRedmineTimeEntriesResponse,
   isRedmineTimeEntryResponse,
   isRedmineTrackersResponse,
   isRedmineUserResponse,
+  isRedmineUsersResponse,
+  isRedmineVersionsResponse,
   isTextResponse,
 } from './redmine-response-validators'
 
@@ -96,6 +117,7 @@ export class RedmineClient {
 
     const headers: Record<string, string> = {
       Accept: 'application/json',
+      'Accept-Language': 'en-US,en;q=0.9',
     }
     if (this.apiKey) {
       headers['X-Redmine-API-Key'] = this.apiKey
@@ -112,7 +134,7 @@ export class RedmineClient {
     this.httpClient = httpClient
   }
 
-  public static fromContext(context: DataSourceContext): RedmineClient {
+  public static fromContext(context: AddonConnectionContext): RedmineClient {
     let apiUrl = ''
     if (context.config && typeof context.config.apiUrl === 'string') {
       apiUrl = context.config.apiUrl
@@ -220,11 +242,13 @@ export class RedmineClient {
 
   public async getIssueById(
     id: string,
+    params?: Record<string, string>,
   ): Promise<Either<AppError, RedmineIssueResponse>> {
     const validation = this.validateConfig()
     if (validation.isFailure()) return validation.forwardFailure()
     return this.httpClient.get<RedmineIssueResponse>(`/issues/${id}.json`, {
       responseValidator: isRedmineIssueResponse,
+      params,
     })
   }
 
@@ -333,10 +357,10 @@ export class RedmineClient {
     return this.inFlightTimeEntries.run(
       InFlightRequests.keyFor('/time_entries.json', params),
       () =>
-        this.httpClient.get<RedmineTimeEntriesResponse>(
-          '/time_entries.json',
-          { responseValidator: isRedmineTimeEntriesResponse, params },
-        ),
+        this.httpClient.get<RedmineTimeEntriesResponse>('/time_entries.json', {
+          responseValidator: isRedmineTimeEntriesResponse,
+          params,
+        }),
     )
   }
 
@@ -441,5 +465,108 @@ export class RedmineClient {
         responseValidator: isRedmineTrackersResponse,
       }),
     )
+  }
+
+  public async listProjects(
+    params?: Record<string, string>,
+  ): Promise<Either<AppError, RedmineProjectsResponse>> {
+    const validation = this.validateConfig()
+    if (validation.isFailure()) return validation.forwardFailure()
+
+    return this.httpClient.get<RedmineProjectsResponse>('/projects.json', {
+      params,
+      responseValidator: isRedmineProjectsResponse,
+    })
+  }
+
+  public async listUsers(
+    params?: Record<string, string>,
+  ): Promise<Either<AppError, RedmineUsersResponse>> {
+    const validation = this.validateConfig()
+    if (validation.isFailure()) return validation.forwardFailure()
+
+    return this.httpClient.get<RedmineUsersResponse>('/users.json', {
+      params,
+      responseValidator: isRedmineUsersResponse,
+    })
+  }
+
+  public async listVersions(
+    projectId: string,
+  ): Promise<Either<AppError, RedmineVersionsResponse>> {
+    const validation = this.validateConfig()
+    if (validation.isFailure()) return validation.forwardFailure()
+
+    return this.httpClient.get<RedmineVersionsResponse>(
+      `/projects/${projectId}/versions.json`,
+      {
+        responseValidator: isRedmineVersionsResponse,
+      },
+    )
+  }
+
+  public async listMemberships(
+    projectId: string,
+    params?: Record<string, string>,
+  ): Promise<Either<AppError, RedmineMembershipsResponse>> {
+    const validation = this.validateConfig()
+    if (validation.isFailure()) return validation.forwardFailure()
+
+    return this.httpClient.get<RedmineMembershipsResponse>(
+      `/projects/${projectId}/memberships.json`,
+      {
+        params,
+        responseValidator: isRedmineMembershipsResponse,
+      },
+    )
+  }
+
+  public async listIssueRelations(
+    issueId: string,
+  ): Promise<Either<AppError, RedmineIssueRelationsResponse>> {
+    const validation = this.validateConfig()
+    if (validation.isFailure()) return validation.forwardFailure()
+
+    return this.httpClient.get<RedmineIssueRelationsResponse>(
+      `/issues/${issueId}/relations.json`,
+      {
+        responseValidator: isRedmineIssueRelationsResponse,
+      },
+    )
+  }
+
+  public async listIssueCategories(
+    projectId: string,
+  ): Promise<Either<AppError, RedmineIssueCategoriesResponse>> {
+    const validation = this.validateConfig()
+    if (validation.isFailure()) return validation.forwardFailure()
+
+    return this.httpClient.get<RedmineIssueCategoriesResponse>(
+      `/projects/${projectId}/issue_categories.json`,
+      {
+        responseValidator: isRedmineIssueCategoriesResponse,
+      },
+    )
+  }
+
+  public async listGroups(): Promise<Either<AppError, RedmineGroupsResponse>> {
+    const validation = this.validateConfig()
+    if (validation.isFailure()) return validation.forwardFailure()
+
+    return this.httpClient.get<RedmineGroupsResponse>('/groups.json', {
+      responseValidator: isRedmineGroupsResponse,
+    })
+  }
+
+  public async listQueries(
+    params?: Record<string, string>,
+  ): Promise<Either<AppError, RedmineQueriesResponse>> {
+    const validation = this.validateConfig()
+    if (validation.isFailure()) return validation.forwardFailure()
+
+    return this.httpClient.get<RedmineQueriesResponse>('/queries.json', {
+      params,
+      responseValidator: isRedmineQueriesResponse,
+    })
   }
 }

@@ -9,59 +9,12 @@ import {
   UpdatedTaskResult,
 } from '@mr-tick/sdk'
 
+import {
+  AtomEntryDTO,
+  NativeAtomParser,
+} from '../../../client/NativeAtomParser'
 import { RedmineClient } from '../../../client/RedmineClient'
 import { RedmineIssueAPI } from '../../../types/redmine'
-
-interface AtomEntryDTO {
-  id: string
-  title: string
-  updated: string
-  authorName: string
-  contentHtml: string
-  rawXmlBlock?: string
-}
-
-class NativeAtomParser {
-  public static parseEntries(xmlText: string): AtomEntryDTO[] {
-    const entries: AtomEntryDTO[] = []
-    const entryBlocks = xmlText.match(/<entry>[\s\S]*?<\/entry>/gi)
-    if (!entryBlocks) return entries
-
-    for (const block of entryBlocks) {
-      const idMatch = block.match(/<id>([\s\S]*?)<\/id>/i)
-      const titleMatch = block.match(/<title>([\s\S]*?)<\/title>/i)
-      const updatedMatch = block.match(/<updated>([\s\S]*?)<\/updated>/i)
-      const authorMatch = block.match(
-        /<author>[\s\S]*?<name>([\s\S]*?)<\/name>[\s\S]*?<\/author>/i,
-      )
-      const contentMatch = block.match(/<content[^>]*>([\s\S]*?)<\/content>/i)
-
-      entries.push({
-        id: idMatch ? idMatch[1].trim() : '',
-        title: titleMatch ? this.decodeEntities(titleMatch[1].trim()) : '',
-        updated: updatedMatch ? updatedMatch[1].trim() : '',
-        authorName: authorMatch
-          ? this.decodeEntities(authorMatch[1].trim())
-          : '',
-        contentHtml: contentMatch
-          ? this.decodeEntities(contentMatch[1].trim())
-          : '',
-        rawXmlBlock: block,
-      })
-    }
-
-    return entries
-  }
-
-  private static decodeEntities(text: string): string {
-    return text
-      .replace(/&amp;/g, '&')
-      .replace(/&lt;/g, '<')
-      .replace(/&gt;/g, '>')
-      .replace(/&quot;/g, '"')
-      .replace(/&#39;/g, "'")
-  }
-}
 
 class AtomTaskMatcher {
   public static wasMentioned(

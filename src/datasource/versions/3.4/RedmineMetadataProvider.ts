@@ -176,13 +176,14 @@ export class RedmineMetadataProvider implements IMetadataProvider {
         }),
       )
 
-    const trackStatuses: MetadataItem[] =
-      trackersResult.success.trackers.map((tracker: RedmineTrackerAPI) => ({
+    const trackStatuses: MetadataItem[] = trackersResult.success.trackers.map(
+      (tracker: RedmineTrackerAPI) => ({
         id: String(tracker.id),
         name: tracker.name,
         icon: 'Bookmark',
         colors: defaultColors,
-      }))
+      }),
+    )
 
     const participantRoles: MetadataItem[] = [
       {

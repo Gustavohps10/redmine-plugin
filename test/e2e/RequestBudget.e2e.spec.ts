@@ -1,6 +1,6 @@
-import { TimeEntryDTO, TimeEntryPullCheckpointDTO } from '@mr-tick/sdk'
 import { createServer, Server } from 'node:http'
 
+import { TimeEntryDTO, TimeEntryPullCheckpointDTO } from '@mr-tick/sdk'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 
 import { RedmineClient } from '../../src/client/RedmineClient'
@@ -48,9 +48,7 @@ describe('Orçamento de requests do conector Redmine (HTTP real)', () => {
       comments: `entry-${index + 1}`,
       spent_on: day,
       created_on: new Date(base).toISOString(),
-      updated_on: new Date(
-        base + Math.floor(index / 4) * 1000,
-      ).toISOString(),
+      updated_on: new Date(base + Math.floor(index / 4) * 1000).toISOString(),
     })).reverse()
     issues = [
       {
@@ -76,7 +74,9 @@ describe('Orçamento de requests do conector Redmine (HTTP real)', () => {
       status: { id: 1, name: 'Nova' },
       priority: { id: 2, name: 'Normal' },
       author: { id: 5, name: 'Autor' },
-      ...(issue.assignedTo ? { assigned_to: { id: 1, name: 'Fulano Silva' } } : {}),
+      ...(issue.assignedTo
+        ? { assigned_to: { id: 1, name: 'Fulano Silva' } }
+        : {}),
       subject: issue.subject,
       description: issue.description,
       created_on: issue.updatedOn,
@@ -230,9 +230,9 @@ describe('Orçamento de requests do conector Redmine (HTTP real)', () => {
 
       const second = await scan(provider, first.checkpoint)
 
-      expect(
-        second.items.find((entry) => entry.id === '5')?.comments,
-      ).toBe('EXTERNAL_UPDATE')
+      expect(second.items.find((entry) => entry.id === '5')?.comments).toBe(
+        'EXTERNAL_UPDATE',
+      )
       expect(second.items).toHaveLength(TOTAL_ENTRIES)
     })
 
@@ -299,9 +299,9 @@ describe('Orçamento de requests do conector Redmine (HTTP real)', () => {
       expect(result.isSuccess()).toBe(true)
       if (result.isFailure()) return
       expect(result.success.map((task) => task.id).sort()).toEqual(['10', '45'])
-      expect(
-        result.success.find((task) => task.id === '45')?.description,
-      ).toBe('Descrição completa')
+      expect(result.success.find((task) => task.id === '45')?.description).toBe(
+        'Descrição completa',
+      )
       const enrichment = issueQueries.filter((query) => query.has('issue_id'))
       expect(enrichment).toHaveLength(1)
       expect(enrichment[0]?.get('issue_id')).toBe('45')

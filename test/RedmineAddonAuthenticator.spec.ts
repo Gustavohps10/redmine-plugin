@@ -19,6 +19,10 @@ describe('RedmineAddon Connection Authenticator', () => {
 
     const mockContext = {
       contributions: {
+        analytics: {
+          register: vi.fn(() => Either.success()),
+          unregister: vi.fn(),
+        },
         dataSources: { register: vi.fn(), unregister: vi.fn() },
         connections: {
           registerAuthenticator,
@@ -79,6 +83,10 @@ describe('RedmineAddon Connection Authenticator', () => {
     const unregisterAuthenticator = vi.fn()
     const mockContext = {
       contributions: {
+        analytics: {
+          register: vi.fn(() => Either.success()),
+          unregister: vi.fn(),
+        },
         dataSources: { register: vi.fn(), unregister: vi.fn() },
         connections: {
           registerAuthenticator: vi.fn(() => Either.success()),

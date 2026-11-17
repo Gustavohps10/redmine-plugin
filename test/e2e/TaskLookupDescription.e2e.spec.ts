@@ -25,18 +25,28 @@ describe('Task lookup response validation over HTTP', () => {
       }
       response.setHeader('Content-Type', 'application/json')
       if (request.url?.startsWith('/issues.json')) {
-        response.end(JSON.stringify({ issues: [issue], total_count: 1, offset: 0, limit: 50 }))
+        response.end(
+          JSON.stringify({
+            issues: [issue],
+            total_count: 1,
+            offset: 0,
+            limit: 50,
+          }),
+        )
         return
       }
       response.end(JSON.stringify({ issue }))
     })
     await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve))
     const address = server.address()
-    if (!address || typeof address === 'string') throw new Error('TEST_SERVER_UNAVAILABLE')
-    provider = new RedmineTaskProvider(new RedmineClient(new AxiosHttpClient(), {
-      apiUrl: `http://127.0.0.1:${address.port}`,
-      apiKey: 'test-key',
-    }))
+    if (!address || typeof address === 'string')
+      throw new Error('TEST_SERVER_UNAVAILABLE')
+    provider = new RedmineTaskProvider(
+      new RedmineClient(new AxiosHttpClient(), {
+        apiUrl: `http://127.0.0.1:${address.port}`,
+        apiKey: 'test-key',
+      }),
+    )
   })
 
   afterEach(async () => {
@@ -53,22 +63,30 @@ describe('Task lookup response validation over HTTP', () => {
   })
 
   it('accepts a null description inside a search result page', async () => {
-    const result = await provider.findAll({ search: 'Task without description' })
+    const result = await provider.findAll({
+      search: 'Task without description',
+    })
     expect(result.isSuccess()).toBe(true)
     if (result.isFailure()) return expect.fail(result.failure.messageKey)
-    expect(result.success.items).toEqual([expect.objectContaining({ id: '76314' })])
+    expect(result.success.items).toEqual([
+      expect.objectContaining({ id: '76314' }),
+    ])
   })
 
-  it.each(['Description text', '', undefined])('keeps accepting description %s', async (value) => {
-    description = value
-    expect((await provider.findById('76314')).isSuccess()).toBe(true)
-  })
+  it.each(['Description text', '', undefined])(
+    'keeps accepting description %s',
+    async (value) => {
+      description = value
+      expect((await provider.findById('76314')).isSuccess()).toBe(true)
+    },
+  )
 
   it('still rejects an invalid description type', async () => {
     description = 123
     const result = await provider.findById('76314')
     expect(result.isFailure()).toBe(true)
-    if (result.isSuccess()) return expect.fail('Expected invalid payload to fail')
+    if (result.isSuccess())
+      return expect.fail('Expected invalid payload to fail')
     expect(result.failure.messageKey).toBe('HTTP_RESPONSE_INVALID')
   })
 })

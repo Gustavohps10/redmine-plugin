@@ -32,7 +32,9 @@ describe('RedmineTaskProvider - Massive & Resilience Suite', () => {
 
     // 2. Apontamentos do usuário nos últimos 30 dias (inclui issues 101, 201, 202, 203, 204)
     httpClient.setRoute('GET', '/time_entries.json', 200, {
-      time_entries: massiveFixture.time_entries.filter((entry) => entry.id !== 606),
+      time_entries: massiveFixture.time_entries.filter(
+        (entry) => entry.id !== 606,
+      ),
       total_count: 5,
     })
 
@@ -150,7 +152,13 @@ describe('RedmineTaskProvider - Massive & Resilience Suite', () => {
     })
 
     // time_entries falha com 500
-    httpClient.setRoute('GET', '/time_entries.json', 500, {}, 'INTERNAL_SERVER_ERROR')
+    httpClient.setRoute(
+      'GET',
+      '/time_entries.json',
+      500,
+      {},
+      'INTERNAL_SERVER_ERROR',
+    )
 
     const client = new RedmineClient(httpClient, {
       apiUrl: 'https://redmine.test',

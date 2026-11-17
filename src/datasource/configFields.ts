@@ -58,7 +58,6 @@ export const configurationFieldGroups: AddonSettingsGroup[] = [
   },
 ]
 
-
 export const customFieldGroups: AddonSettingsGroup[] = [
   {
     id: 'custom-mappings',
@@ -148,4 +147,3 @@ export const redmineSettingsSchema: AddonSettingsTab[] = [
     groups: customFieldGroups,
   },
 ]
-

@@ -22,11 +22,9 @@ export class InFlightRequests<T> {
     params?: Record<string, string>,
   ): string {
     if (!params) return resource
-    const query = Object.entries(params)
-      .sort(([first], [second]) => first.localeCompare(second))
-      .map(([name, value]) => `${name}=${value}`)
-      .join('&')
-
-    return `${resource}?${query}`
+    const query = Object.entries(params).sort(([first], [second]) =>
+      first.localeCompare(second),
+    )
+    return JSON.stringify([resource, query])
   }
 }
